@@ -10,46 +10,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "fsm_feux.h"
 
-/* States */
-typedef enum {
-    ST_ANY = -1,                            /* Any state */
-    ST_INIT = 0,                            /* Init state */
-    ST_ETEINTS = 1,
-    ST_ALLUMES = 2,
-    ST_ACQUITTES = 3,
-    ST_ERREUR = 4,
-    ST_TERM = 255                           /* Final state */
-} fsm_state_t;
-
-/* Events */
-typedef enum {
-    EV_ANY = -1,                            /* Any event */
-    EV_NONE = 0,                            /* No event */
-    EV_CMD0 = 1,
-    EV_CMD1 = 2,
-    EV_ACQ_RECU = 3,
-    EV_ACQ_NON_RECU = 4,
-    EV_ERR = 255                            /* Error event */
-} fsm_event_t;
 
 /* Callback functions called on transitions */
 
 static int FsmError(void) { };
-
-/* Transition structure */
-typedef struct {
-    fsm_state_t state;
-    fsm_event_t event;
-    int (*callback)(void);
-    fsm_state_t next_state;
-} tTransition;
 
 /* Transition table */
 tTransition trans[] = {
     /* These are examples */
     { ST_INIT, EV_ANY, NULL, ST_ETEINTS},
     { ST_ETEINTS, EV_CMD1, NULL, ST_ALLUMES},
+    { ST_ETEINTS, EV_CMD0, NULL, ST_ETEINTS},
+    { ST_ALLUMES, EV_CMD0, NULL, ST_ETEINTS},
+    { ST_ALLUMES, EV_CMD1, NULL, ST_ALLUMES},
     { ST_ALLUMES, EV_ACQ_RECU, NULL, ST_ACQUITTES},
     { ST_ALLUMES, EV_ACQ_NON_RECU, &FsmError, ST_ERREUR},
     {ST_ACQUITTES, EV_CMD0, NULL, ST_ETEINTS}
@@ -57,67 +32,105 @@ tTransition trans[] = {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-int get_next_event(int current_state)
-{
-    int event = EV_NONE;
-
-    /* Here, you can get the parameters of your FSM */
-
-    /* Build all the events */
-
-    /*Example code : 
-    if (PARAM1 == ...) {
-        event = EV_EVENT1
-    }
-    else if (PARAM2 == ... && PARAM3 == ...) {
-        event = EV_EVENT2
-    }
-    ...
-    */
-    uint8_t cmd_position = get_cmd_feux_position();
-
-    if (current_state == ST_ETEINTS){
-
-    }else if (current_state == ST_ALLUMES){
-
-    }else if (current_state == ST_ACQUITTES){
-
-    }else if (current_state == ST_ERREUR){
-
-    }
-    return event;
-}
-
-int main(void)
-{
-    int i = 0;
-    int ret = 0; 
-    int event = EV_NONE;
-    int state = ST_INIT;
+fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, type_feu_t quel_feu) {
+    uint8_t cmd, acq;
+    uint32_t timer;
     
-    /* While FSM hasn't reach end state */
-    while (state != ST_TERM) {
-        
-        /* Get event */
-        event = get_next_event(state);
-        
-        /* For each transitions */
-        for (i = 0; i < TRANS_COUNT; i++) {
-            /* If State is current state OR The transition applies to all states ...*/
-            if ((state == trans[i].state) || (ST_ANY == trans[i].state)) {
-                /* If event is the transition event OR the event applies to all */
-                if ((event == trans[i].event) || (EV_ANY == trans[i].event)) {
-                    /* Apply the new state */
-                    state = trans[i].next_state;
-                    if (trans[i].callback != NULL) {
-                        /* Call the state function */
-                        ret = (trans[i].callback)();
-                    }
-                    break;
+    // On va chercher la bonne donnée selon le feu demandé
+    if (quel_feu == FEU_POSITION) {
+        cmd = get_cmd_feux_position(); 
+        acq = get_acq_feux_position();
+        timer = get_timer_feux_position();
+    } else if (quel_feu == FEU_CROISEMENT) {
+        cmd = get_cmd_feux_croisement();
+        acq = get_acq_feux_croisement();
+        timer = get_timer_feux_croisement();
+    } else {
+        cmd = get_cmd_feux_route();
+        acq = get_acq_feux_route();
+        timer = get_timer_feux_route();
+    }
+
+    // 2. Logique de décision par état
+    switch (current_state) {
+        case ST_ETEINTS:
+            if (quel_feu == FEU_POSITION){
+                    set_acq_feux_position(0);
+            }else if (quel_feu == FEU_CROISEMENT){
+                set_acq_feux_croisement(0);
+            }else{
+                set_acq_feux_route(0);
+            }
+            if (cmd == 1) return EV_CMD1; 
+            if (cmd == 0) return EV_CMD0;
+            break;
+
+        case ST_ALLUMES:
+            if (cmd == 1) return EV_CMD1;
+            if (cmd == 0) return EV_CMD0;
+
+            if (acq == 1) {
+                if (quel_feu == FEU_POSITION){
+                    set_timer_feux_position(0); // Reset le timer car reçu
+                }else if (quel_feu == FEU_CROISEMENT){
+                    set_timer_feux_croisement(0);
+                }else{
+                    set_timer_feux_route(0);
+                }
+                return EV_ACQ_RECU;
+            }
+            
+            // Gestion du timeout (1s = 10 * 100ms)
+            if (timer >= 10) {
+                if (quel_feu == FEU_POSITION){
+                    set_timer_feux_position(0); // Reset le timer car reçu
+                }else if (quel_feu == FEU_CROISEMENT){
+                    set_timer_feux_croisement(0);
+                }else{
+                    set_timer_feux_route(0);
+                }
+                return EV_ACQ_NON_RECU;
+            } else {
+                if (quel_feu == FEU_POSITION){
+                    set_timer_feux_position(timer + 1); // Reset le timer car reçu
+                }else if (quel_feu == FEU_CROISEMENT){
+                    set_timer_feux_croisement(timer + 1);
+                }else{
+                    set_timer_feux_route(timer + 1);
                 }
             }
-        }
+            break;
+
+        case ST_ACQUITTES:
+            if (cmd == 0) return EV_CMD0;
+            if (cmd == 1) return EV_CMD1;
+            break;
+
+        case ST_ERREUR:
+            
+            break;
+
+        default:
+            break;
     }
 
-    return ret;
+    return EV_NONE;
+}
+
+// Cette fonction fait avancer UNE machine à état d'un pas (step)
+void fsm_update(fsm_feux_state_t *current_state, fsm_feux_event_t event) {
+    for (int i = 0; i < TRANS_COUNT; i++) {
+        // Si l'état correspond ET l'événement correspond
+        if ((*current_state == trans[i].state || trans[i].state == ST_ANY) && 
+            (event == trans[i].event)) {
+            
+            *current_state = trans[i].next_state;
+            
+            // Exécuter l'action associée (callback) si elle existe
+            if (trans[i].callback != NULL) {
+                trans[i].callback();
+            }
+            break; // Transition trouvée, on sort de la boucle for
+        }
+    }
 }
