@@ -34,21 +34,21 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 64){
         trame -=64;
-        set_cmd_feux_position(1);
+        set_cmd_position_lights(1);
     }else {
-        set_cmd_feux_position(0);
+        set_cmd_position_lights(0);
     }
     if (trame >= 32){
         trame -= 32;
-        set_cmd_feux_croisement(1);
+        set_cmd_low_beams_headlights(1);
     }else{
-        set_cmd_feux_croisement(0);
+        set_cmd_low_beams_headlights(0);
     }
     if (trame >= 16){
         trame -= 16;
-        set_cmd_feux_route(1);
+        set_cmd_high_beams_headlights(1);
     }else{
-        set_cmd_feux_route(0);
+        set_cmd_high_beams_headlights(0);
     }
     if (trame >= 8){
         trame -= 8;
@@ -87,13 +87,13 @@ void receive_udp_frame(int32_t fd_trame){
                         {
                         case 1:
                             printf("RECU ACQ BGF: ID=1, VAL=%d\n", message.frame[1]);
-                            set_acq_feux_position(message.frame[1]);
+                            set_acq_position_lights(message.frame[1]);
                             break;
                         case 2:
-                            set_acq_feux_croisement(message.frame[1]);
+                            set_acq_low_beams_headlights(message.frame[1]);
                             break;
                         case 3:
-                            set_acq_feux_route(message.frame[1]);
+                            set_acq_high_beams_headlights(message.frame[1]);
                             break;
                         default:
                             break;
@@ -111,7 +111,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
-        if (get_cmd_feux_position()==0){
+        if (get_cmd_position_lights()==0){
             serialData[0].frame[0]=1;
             serialData[0].frame[1]=0;
         }else{
@@ -125,7 +125,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
-        if (get_cmd_feux_croisement()==0){
+        if (get_cmd_low_beams_headlights()==0){
             serialData[0].frame[0]=2;
             serialData[0].frame[1]=0;
         }else{
@@ -139,7 +139,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
-        if (get_cmd_feux_route()==0){
+        if (get_cmd_high_beams_headlights()==0){
             serialData[0].frame[0]=3;
             serialData[0].frame[1]=0;
         }else{
@@ -151,13 +151,13 @@ void send_trame(int32_t fd_trame){
     }
     
     uint8_t udpFrame[10]={0};
-    if (get_acq_feux_position()==1 && get_cmd_feux_position()==1){
+    if (get_acq_position_lights()==1 && get_cmd_position_lights()==1){
         udpFrame[0]+=128;
     }
-    if (get_acq_feux_croisement()==1 && get_cmd_feux_croisement()==1){
+    if (get_acq_low_beams_headlights()==1 && get_cmd_low_beams_headlights()==1){
         udpFrame[0]+=64;
     }
-    if (get_acq_feux_route()==1 && get_cmd_feux_route()==1){
+    if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
     }
 
@@ -180,25 +180,25 @@ int main(){
         receive_udp_frame(fd_trame);
 
         previous_etat_position = etat_position;
-        fsm_feux_event_t ev_pos = get_next_event(etat_position, FEU_POSITION);
+        fsm_feux_event_t ev_pos = get_next_event(etat_position, POSITION_LIGHTS);
         //printf("ev_pos : %d\n", ev_pos);
         fsm_update(&etat_position, ev_pos);
 
         // Gestion des Feux de Croisement
         previous_etat_croisement = etat_croisement;
-        fsm_feux_event_t ev_crois = get_next_event(etat_croisement, FEU_CROISEMENT);
+        fsm_feux_event_t ev_crois = get_next_event(etat_croisement, LOW_BEAMS_HEADLIGHTS);
         fsm_update(&etat_croisement, ev_crois);
 
         // Gestion des Feux de Route
         previous_etat_route = etat_route;
-        fsm_feux_event_t ev_route = get_next_event(etat_route, FEU_ROUTE);
+        fsm_feux_event_t ev_route = get_next_event(etat_route, HIGH_BEAMS_HEADLIGHTS);
         fsm_update(&etat_route, ev_route);
 
         printf("etat_position : %d\n", etat_position);
         printf("etat_croisement : %d\n", etat_croisement);
         printf("etat_route : %d\n", etat_route);
 
-        //printf("cmd_position : %d\n", get_cmd_feux_position());
+        //printf("cmd_position : %d\n", get_cmd_position_lights());
 
         send_trame(fd_trame);
     }

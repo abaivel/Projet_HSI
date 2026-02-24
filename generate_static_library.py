@@ -19,7 +19,7 @@ h_file = open("bcgv_lib.h", "w")
 h_file.write("#ifndef DRV_API_H_\n#define DRV_API_H_\n\n#include <stdint.h>\n\n")
 h_file.write("#define SER_NUM_BGF 11\n#define SER_NUM_COMODO 12\n\n")
 
-c_file.write('#include "data.h"\n\n')
+c_file.write('#include "bcgv_lib.h"\n\n')
 
 dimensions= {}
 

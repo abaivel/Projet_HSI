@@ -1,4 +1,4 @@
-#ifndef DRV_API_H_
+//#ifndef DRV_API_H_
 #define DRV_API_H_
 
 #include <stdint.h>
@@ -8,7 +8,7 @@
 
 typedef uint8_t cmd_t;
 typedef uint8_t acq_t;
-typedef uint32_t timer_t;
+//typedef uint32_t timer_t;
 typedef uint8_t thread_number_t;
 typedef uint32_t mileage_t;
 typedef uint8_t speed_t;
@@ -114,4 +114,4 @@ crc8_t get_crc8();
 void set_crc8(crc8_t new_value);
 
 
-#endif
+//#endif
