@@ -1,4 +1,4 @@
-#include "types.h"
+#include "bcgv_lib.h"
 
 typedef enum {
     ST_ANY = -1,                            /* Any state */
@@ -36,7 +36,7 @@ typedef struct {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, type_feu_t quel_feu);
+fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t quel_feu);
 
 // Cette fonction fait avancer UNE machine à état d'un pas (step)
 void fsm_update(fsm_feux_state_t *current_state, fsm_feux_event_t event);

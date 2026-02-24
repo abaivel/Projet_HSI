@@ -1,4 +1,4 @@
-#include "data.h"
+#include "bcgv_lib.h"
 
 static cmd_t cmd_hazard_lights = 0;
 static cmd_t cmd_position_lights = 0;
