@@ -33,22 +33,23 @@ tTransition trans[] = {
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
 fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t quel_feu) {
-    uint8_t cmd, acq;
-    uint32_t timer;
+    cmd_t cmd
+    acq_t acq;
+    timer_t timer;
     
     // On va chercher la bonne donnée selon le feu demandé
     if (quel_feu == POSITION_LIGHTS) {
         cmd = get_cmd_position_lights(); 
         acq = get_acq_position_lights();
-        //timer = get_timer_position_lights();
+        timer = get_timer_position_lights();
     } else if (quel_feu == LOW_BEAMS_HEADLIGHTS) {
         cmd = get_cmd_low_beams_headlights();
         acq = get_acq_low_beams_headlights();
-        //timer = get_timer_low_beams_headlights();
+        timer = get_timer_low_beams_headlights();
     } else {
         cmd = get_cmd_high_beams_headlights();
         acq = get_acq_high_beams_headlights();
-        //timer = get_timer_high_beams_headlights();
+        timer = get_timer_high_beams_headlights();
     }
 
     // 2. Logique de décision par état
@@ -70,34 +71,34 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t que
             if (cmd == 0) return EV_CMD0;
 
             if (acq == 1) {
-                /*if (quel_feu == POSITION_LIGHTS){
+                if (quel_feu == POSITION_LIGHTS){
                     set_timer_position_lights(0); // Reset le timer car reçu
                 }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(0);
                 }else{
                     set_timer_high_beams_headlights(0);
-                }*/
+                }
                 return EV_ACQ_RECU;
             }
             
             // Gestion du timeout (1s = 10 * 100ms)
             if (timer >= 10) {
-                /*if (quel_feu == POSITION_LIGHTS){
+                if (quel_feu == POSITION_LIGHTS){
                     set_timer_position_lights(0); // Reset le timer car reçu
                 }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(0);
                 }else{
                     set_timer_high_beams_headlights(0);
-                }*/
+                }
                 return EV_ACQ_NON_RECU;
             } else {
-                /*if (quel_feu == POSITION_LIGHTS){
+                if (quel_feu == POSITION_LIGHTS){
                     set_timer_position_lights(timer + 1); // Reset le timer car reçu
                 }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(timer + 1);
                 }else{
                     set_timer_high_beams_headlights(timer + 1);
-                }*/
+                }
             }
             break;
 

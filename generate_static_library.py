@@ -9,9 +9,6 @@ def get_min_max_from_interval(interval):
 types = read_excel("data_project.xlsx", "Types")
 data = read_excel("data_project.xlsx", "Data")
 
-print(types)
-print(data)
-
 
 c_file = open("bcgv_lib.c", "w")
 h_file = open("bcgv_lib.h", "w")
@@ -58,8 +55,6 @@ for d in data.values:
     set_f += "}\n\n"
 
     c_file.write(set_f)
-
-print(dimensions)
 
 
 
