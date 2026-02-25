@@ -1,43 +1,43 @@
 #include <stdint.h>
 
-uint8_t get_cmd_feux_position();
+uint8_t get_cmd_position_headlights();
 
-uint8_t get_acq_feux_position();
+uint8_t get_acq_position_headlights();
 
-uint32_t get_timer_feux_position();
+uint32_t get_timer_position_headlights();
 
-uint8_t get_cmd_feux_croisement();
+uint8_t get_cmd_low_beams_headlights();
 
-uint8_t get_acq_feux_croisement();
+uint8_t get_acq_low_beams_headlights();
 
-uint32_t get_timer_feux_croisement();
+uint32_t get_timer_low_beams_headlights();
 
-uint8_t get_cmd_feux_route();
+uint8_t get_cmd_high_beams_headlights();
 
-uint8_t get_acq_feux_route();
+uint8_t get_acq_high_beams_headlights();
 
-uint32_t get_timer_feux_route();
+uint32_t get_timer_high_beams_headlights();
 
-void set_cmd_feux_position(uint8_t cmd);
+void set_cmd_position_headlights(uint8_t cmd);
 
-void set_acq_feux_position(uint8_t acq);
+void set_acq_position_headlights(uint8_t acq);
 
-void set_timer_feux_position(uint32_t timer);
+void set_timer_position_headlights(uint32_t timer);
 
-void set_cmd_feux_croisement(uint8_t cmd);
+void set_cmd_low_beams_headlights(uint8_t cmd);
 
-void set_acq_feux_croisement(uint8_t acq);
+void set_acq_low_beams_headlights(uint8_t acq);
 
-void set_timer_feux_croisement(uint32_t timer);
+void set_timer_low_beams_headlights(uint32_t timer);
 
-void set_cmd_feux_route(uint8_t cmd);
+void set_cmd_high_beams_headlights(uint8_t cmd);
 
-void set_acq_feux_route(uint8_t acq);
+void set_acq_high_beams_headlights(uint8_t acq);
 
-void set_timer_feux_route(uint32_t timer);
+void set_timer_high_beams_headlights(uint32_t timer);
 
 typedef enum {
-    FEU_POSITION, FEU_CROISEMENT, FEU_ROUTE
+    POSITION_HEADLIGHTS, LOW_BEAMS_HEADLIGHTS, HIGH_BEAMS_HEADLIGHTS
 } type_feu_t;
 
 typedef struct {

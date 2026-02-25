@@ -38,5 +38,5 @@ typedef struct {
 
 fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t quel_feu);
 
-// Cette fonction fait avancer UNE machine à état d'un pas (step)
+// This function makes ONE machine state move forward by one step
 void fsm_update(fsm_feux_state_t *current_state, fsm_feux_event_t event);

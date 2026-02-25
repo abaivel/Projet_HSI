@@ -3,13 +3,13 @@
 #include "drv_api.h"
 #include "fsm_feux.h"
 
-static fsm_feux_state_t etat_position = ST_ETEINTS;
-static fsm_feux_state_t etat_croisement = ST_ETEINTS;
-static fsm_feux_state_t etat_route = ST_ETEINTS;
+static fsm_feux_state_t state_position = ST_ETEINTS;
+static fsm_feux_state_t state_low_beams = ST_ETEINTS;
+static fsm_feux_state_t state_high_beams = ST_ETEINTS;
 
-static fsm_feux_state_t previous_etat_position = ST_ETEINTS;
-static fsm_feux_state_t previous_etat_croisement = ST_ETEINTS;
-static fsm_feux_state_t previous_etat_route = ST_ETEINTS;
+static fsm_feux_state_t previous_state_position = ST_ETEINTS;
+static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
+static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
 
 static int index = 0;
 
@@ -86,7 +86,7 @@ void receive_udp_frame(int32_t fd_trame){
                         switch (message.frame[0])
                         {
                         case 1:
-                            printf("RECU ACQ BGF: ID=1, VAL=%d\n", message.frame[1]);
+                            printf("RECIVED ACQ BGF: ID=1, VAL=%d\n", message.frame[1]);
                             set_acq_position_lights(message.frame[1]);
                             break;
                         case 2:
@@ -107,7 +107,7 @@ void receive_udp_frame(int32_t fd_trame){
 }
 
 void send_trame(int32_t fd_trame){
-    if (previous_etat_position != etat_position){
+    if (previous_state_position != state_position){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
@@ -118,10 +118,10 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=1;
             serialData[0].frame[1]=1;
         }
-        printf("ENVOI BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
-    if (previous_etat_croisement != etat_croisement){
+    if (previous_state_low_beams != state_low_beams){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
@@ -132,10 +132,10 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=2;
             serialData[0].frame[1]=1;
         }
-        printf("ENVOI BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
-    if (previous_etat_route != etat_route){
+    if (previous_state_high_beams != state_high_beams){
         serial_frame_t serialData[1];
         serialData[0].serNum = 11;
         serialData[0].frameSize = 2;
@@ -146,7 +146,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=3;
             serialData[0].frame[1]=1;
         }
-        printf("ENVOI BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     
@@ -171,32 +171,32 @@ void init_comm(){
 int main(){
     int32_t fd_trame = drv_open();
 
-    printf("etat_position : %d\n", etat_position);
-    printf("etat_croisement : %d\n", etat_croisement);
-    printf("etat_route : %d\n", etat_route);
+    printf("state_position : %d\n", state_position);
+    printf("state_low_beams : %d\n", state_low_beams);
+    printf("state_high_beams : %d\n", state_high_beams);
 
     while (1){
         
         receive_udp_frame(fd_trame);
 
-        previous_etat_position = etat_position;
-        fsm_feux_event_t ev_pos = get_next_event(etat_position, POSITION_LIGHTS);
+        previous_state_position = state_position;
+        fsm_feux_event_t ev_pos = get_next_event(state_position, POSITION_LIGHTS);
         //printf("ev_pos : %d\n", ev_pos);
-        fsm_update(&etat_position, ev_pos);
+        fsm_update(&state_position, ev_pos);
 
-        // Gestion des Feux de Croisement
-        previous_etat_croisement = etat_croisement;
-        fsm_feux_event_t ev_crois = get_next_event(etat_croisement, LOW_BEAMS_HEADLIGHTS);
-        fsm_update(&etat_croisement, ev_crois);
+        // managment of low beams headlights
+        previous_state_low_beams = state_low_beams;
+        fsm_feux_event_t ev_crois = get_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
+        fsm_update(&state_low_beams, ev_crois);
 
-        // Gestion des Feux de Route
-        previous_etat_route = etat_route;
-        fsm_feux_event_t ev_route = get_next_event(etat_route, HIGH_BEAMS_HEADLIGHTS);
-        fsm_update(&etat_route, ev_route);
+        // Managment of high beams headlights
+        previous_state_high_beams = state_high_beams;
+        fsm_feux_event_t ev_route = get_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
+        fsm_update(&state_high_beams, ev_route);
 
-        printf("etat_position : %d\n", etat_position);
-        printf("etat_croisement : %d\n", etat_croisement);
-        printf("etat_route : %d\n", etat_route);
+        printf("state_position : %d\n", state_position);
+        printf("state_low_beams : %d\n", state_low_beams);
+        printf("state_high_beams : %d\n", state_high_beams);
 
         //printf("cmd_position : %d\n", get_cmd_position_lights());
 

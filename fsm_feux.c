@@ -32,17 +32,17 @@ tTransition trans[] = {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t quel_feu) {
-    cmd_t cmd
+fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t which_light) {
+    cmd_t cmd;
     acq_t acq;
     timer_t timer;
     
-    // On va chercher la bonne donnée selon le feu demandé
-    if (quel_feu == POSITION_LIGHTS) {
+    // We search for the right data depending on the headlight asked
+    if (which_light == POSITION_LIGHTS) {
         cmd = get_cmd_position_lights(); 
         acq = get_acq_position_lights();
         timer = get_timer_position_lights();
-    } else if (quel_feu == LOW_BEAMS_HEADLIGHTS) {
+    } else if (which_light == LOW_BEAMS_HEADLIGHTS) {
         cmd = get_cmd_low_beams_headlights();
         acq = get_acq_low_beams_headlights();
         timer = get_timer_low_beams_headlights();
@@ -52,12 +52,12 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t que
         timer = get_timer_high_beams_headlights();
     }
 
-    // 2. Logique de décision par état
+    // 2. Desision logic based on state
     switch (current_state) {
         case ST_ETEINTS:
-            if (quel_feu == POSITION_LIGHTS){
+            if (which_light == POSITION_LIGHTS){
                     set_acq_position_lights(0);
-            }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
+            }else if (which_light == LOW_BEAMS_HEADLIGHTS){
                 set_acq_low_beams_headlights(0);
             }else{
                 set_acq_high_beams_headlights(0);
@@ -71,9 +71,9 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t que
             if (cmd == 0) return EV_CMD0;
 
             if (acq == 1) {
-                if (quel_feu == POSITION_LIGHTS){
-                    set_timer_position_lights(0); // Reset le timer car reçu
-                }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
+                if (which_light == POSITION_LIGHTS){
+                    set_timer_position_lights(0); // Reset the timer because recieved
+                }else if (which_light == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(0);
                 }else{
                     set_timer_high_beams_headlights(0);
@@ -81,20 +81,20 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t que
                 return EV_ACQ_RECU;
             }
             
-            // Gestion du timeout (1s = 10 * 100ms)
+            // Timeout managment (1s = 10 * 100ms)
             if (timer >= 10) {
-                if (quel_feu == POSITION_LIGHTS){
-                    set_timer_position_lights(0); // Reset le timer car reçu
-                }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
+                if (which_light == POSITION_LIGHTS){
+                    set_timer_position_lights(0); // Reset the timer because recieved
+                }else if (which_light == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(0);
                 }else{
                     set_timer_high_beams_headlights(0);
                 }
                 return EV_ACQ_NON_RECU;
             } else {
-                if (quel_feu == POSITION_LIGHTS){
-                    set_timer_position_lights(timer + 1); // Reset le timer car reçu
-                }else if (quel_feu == LOW_BEAMS_HEADLIGHTS){
+                if (which_light == POSITION_LIGHTS){
+                    set_timer_position_lights(timer + 1); // Reset the timer because recieved
+                }else if (which_light == LOW_BEAMS_HEADLIGHTS){
                     set_timer_low_beams_headlights(timer + 1);
                 }else{
                     set_timer_high_beams_headlights(timer + 1);
@@ -118,20 +118,20 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t que
     return EV_NONE;
 }
 
-// Cette fonction fait avancer UNE machine à état d'un pas (step)
+// This function makes ONE machine state move forward by one step
 void fsm_update(fsm_feux_state_t *current_state, fsm_feux_event_t event) {
     for (int i = 0; i < TRANS_COUNT; i++) {
-        // Si l'état correspond ET l'événement correspond
+        // If state is matches AND the event matches
         if ((*current_state == trans[i].state || trans[i].state == ST_ANY) && 
             (event == trans[i].event)) {
             
             *current_state = trans[i].next_state;
             
-            // Exécuter l'action associée (callback) si elle existe
+            // Execute the associated action (callback) if it exist
             if (trans[i].callback != NULL) {
                 trans[i].callback();
             }
-            break; // Transition trouvée, on sort de la boucle for
+            break; // Transition found, we quit the for loop
         }
     }
 }
