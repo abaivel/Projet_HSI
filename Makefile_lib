@@ -1,0 +1,10 @@
+all: bcgv_lib.a
+
+bcgv_lib.a: bcgv_lib.o
+	ar rcs bcgv_lib.a bcgv_lib.o
+
+bcgv_lib.o: bcgv_lib.c
+	gcc -c bcgv_lib.c -o bcgv_lib.o
+
+clean:
+	rm -f bcgv_lib.o bcgv_lib.a
