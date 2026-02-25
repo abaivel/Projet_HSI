@@ -14,6 +14,13 @@ static acq_t acq_high_beams_headlights = 0;
 static acq_t acq_right_blinkers = 0;
 static acq_t acq_left_blinkers = 0;
 static acq_t acq_hazard_lights = 0;
+static timer_t timer_position_lights = 0;
+static timer_t timer_low_beams_lights = 0;
+static timer_t timer_high_beams_lights = 0;
+static timer_t timer_right_blinkers = 0;
+static timer_t timer_left_blinkers = 0;
+static timer_t timer_hazard_lights = 0;
+static timer_t timer_wipers = 0;
 static thread_number_t thread_number = 0;
 static mileage_t mileage = 0;
 static speed_t speed = 0;
@@ -163,6 +170,62 @@ void set_acq_hazard_lights(acq_t new_value){
   if (new_value >= 0 && new_value <= 1){
       acq_hazard_lights = new_value;
   }
+}
+
+timer_t get_timer_position_lights(){
+  return timer_position_lights;
+}
+
+void set_timer_position_lights(timer_t new_value){
+  timer_position_lights = new_value;
+}
+
+timer_t get_timer_low_beams_lights(){
+  return timer_low_beams_lights;
+}
+
+void set_timer_low_beams_lights(timer_t new_value){
+  timer_low_beams_lights = new_value;
+}
+
+timer_t get_timer_high_beams_lights(){
+  return timer_high_beams_lights;
+}
+
+void set_timer_high_beams_lights(timer_t new_value){
+  timer_high_beams_lights = new_value;
+}
+
+timer_t get_timer_right_blinkers(){
+  return timer_right_blinkers;
+}
+
+void set_timer_right_blinkers(timer_t new_value){
+  timer_right_blinkers = new_value;
+}
+
+timer_t get_timer_left_blinkers(){
+  return timer_left_blinkers;
+}
+
+void set_timer_left_blinkers(timer_t new_value){
+  timer_left_blinkers = new_value;
+}
+
+timer_t get_timer_hazard_lights(){
+  return timer_hazard_lights;
+}
+
+void set_timer_hazard_lights(timer_t new_value){
+  timer_hazard_lights = new_value;
+}
+
+timer_t get_timer_wipers(){
+  return timer_wipers;
+}
+
+void set_timer_wipers(timer_t new_value){
+  timer_wipers = new_value;
 }
 
 thread_number_t get_thread_number(){

@@ -1,4 +1,4 @@
-//#ifndef DRV_API_H_
+#ifndef DRV_API_H_
 #define DRV_API_H_
 
 #include <stdint.h>
@@ -8,7 +8,7 @@
 
 typedef uint8_t cmd_t;
 typedef uint8_t acq_t;
-//typedef uint32_t timer_t;
+typedef uint32_t timer_t;
 typedef uint8_t thread_number_t;
 typedef uint32_t mileage_t;
 typedef uint8_t speed_t;
@@ -16,32 +16,32 @@ typedef uint8_t tank_level_t;
 typedef uint32_t revolutions_minute_t;
 typedef uint8_t crc8_t;
 
-typedef enum {
-    POSITION_LIGHTS, LOW_BEAMS_HEADLIGHTS, HIGH_BEAMS_HEADLIGHTS
+typedef enum {_x000d_
+    POSITION_LIGHTS, LOW_BEAMS_HEADLIGHTS, HIGH_BEAMS_HEADLIGHTS_x000d_
 } light_type_t;
 
-typedef enum {
-    RIGHT_BLINKERS, LEFT_BLINKERS, HAZARD_LIGHTS
+typedef enum {_x000d_
+    RIGHT_BLINKERS, LEFT_BLINKERS, HAZARD_LIGHTS_x000d_
 } blinkers_type_t;
 
-typedef enum {
-    NO_CHASSIS_PROBLEM = 0, TIRE_PRESSURE = 1, BRAKE_FAILURE = 2
+typedef enum {_x000d_
+    NO_CHASSIS_PROBLEM = 0, TIRE_PRESSURE = 1, BRAKE_FAILURE = 2_x000d_
 } chassis_problems_type_t;
 
-typedef enum {
-    NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING
+typedef enum {_x000d_
+    NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING_x000d_
 } engine_problems_type_t;
 
-typedef enum {
-    NO_BATTERY_PROBLEM = 0, DISCHARGED = 1, FAILURE = 2
+typedef enum {_x000d_
+    NO_BATTERY_PROBLEM = 0, DISCHARGED = 1, FAILURE = 2_x000d_
 } battery_problems_type_t;
 
-typedef enum {
-    POSITION_LIGHTS_ACTIVATION = 1, LOW_BEAMS_HEADLIGHTS_ACTIVATION = 2, HIGH_BEAMS_HEADLIGHTS_ACTIVATION = 3, RIGHT_BLINKERS_ACTIVATION = 4, LEFT_BLINKERS_ACTIVATION = 5
+typedef enum {_x000d_
+    POSITION_LIGHTS_ACTIVATION = 1, LOW_BEAMS_HEADLIGHTS_ACTIVATION = 2, HIGH_BEAMS_HEADLIGHTS_ACTIVATION = 3, RIGHT_BLINKERS_ACTIVATION = 4, LEFT_BLINKERS_ACTIVATION = 5_x000d_
 } message_id_to_bgf_t;
 
-typedef enum {
-    OFF=0, ON=1
+typedef enum {_x000d_
+    OFF=0, ON=1_x000d_
 } state_lights_t;
 
 cmd_t get_cmd_hazard_lights();
@@ -86,6 +86,27 @@ void set_acq_left_blinkers(acq_t new_value);
 acq_t get_acq_hazard_lights();
 void set_acq_hazard_lights(acq_t new_value);
 
+timer_t get_timer_position_lights();
+void set_timer_position_lights(timer_t new_value);
+
+timer_t get_timer_low_beams_lights();
+void set_timer_low_beams_lights(timer_t new_value);
+
+timer_t get_timer_high_beams_lights();
+void set_timer_high_beams_lights(timer_t new_value);
+
+timer_t get_timer_right_blinkers();
+void set_timer_right_blinkers(timer_t new_value);
+
+timer_t get_timer_left_blinkers();
+void set_timer_left_blinkers(timer_t new_value);
+
+timer_t get_timer_hazard_lights();
+void set_timer_hazard_lights(timer_t new_value);
+
+timer_t get_timer_wipers();
+void set_timer_wipers(timer_t new_value);
+
 thread_number_t get_thread_number();
 void set_thread_number(thread_number_t new_value);
 
@@ -114,4 +135,4 @@ crc8_t get_crc8();
 void set_crc8(crc8_t new_value);
 
 
-//#endif
+#endif
