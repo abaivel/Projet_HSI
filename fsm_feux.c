@@ -35,7 +35,7 @@ tTransition trans[] = {
 fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t which_light) {
     cmd_t cmd;
     acq_t acq;
-    timer_t timer;
+    timer_bcgv_t timer;
     
     // We search for the right data depending on the headlight asked
     if (which_light == POSITION_LIGHTS) {
