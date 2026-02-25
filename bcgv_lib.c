@@ -15,8 +15,8 @@ static acq_t acq_right_blinkers = 0;
 static acq_t acq_left_blinkers = 0;
 static acq_t acq_hazard_lights = 0;
 static timer_bcgv_t timer_position_lights = 0;
-static timer_bcgv_t timer_low_beams_lights = 0;
-static timer_bcgv_t timer_high_beams_lights = 0;
+static timer_bcgv_t timer_low_beams_headlights = 0;
+static timer_bcgv_t timer_high_beams_headlights = 0;
 static timer_bcgv_t timer_right_blinkers = 0;
 static timer_bcgv_t timer_left_blinkers = 0;
 static timer_bcgv_t timer_hazard_lights = 0;
@@ -180,20 +180,20 @@ void set_timer_position_lights(timer_bcgv_t new_value){
   timer_position_lights = new_value;
 }
 
-timer_bcgv_t get_timer_low_beams_lights(){
-  return timer_low_beams_lights;
+timer_bcgv_t get_timer_low_beams_headlights(){
+  return timer_low_beams_headlights;
 }
 
-void set_timer_low_beams_lights(timer_bcgv_t new_value){
-  timer_low_beams_lights = new_value;
+void set_timer_low_beams_headlights(timer_bcgv_t new_value){
+  timer_low_beams_headlights = new_value;
 }
 
-timer_bcgv_t get_timer_high_beams_lights(){
-  return timer_high_beams_lights;
+timer_bcgv_t get_timer_high_beams_headlights(){
+  return timer_high_beams_headlights;
 }
 
-void set_timer_high_beams_lights(timer_bcgv_t new_value){
-  timer_high_beams_lights = new_value;
+void set_timer_high_beams_headlights(timer_bcgv_t new_value){
+  timer_high_beams_headlights = new_value;
 }
 
 timer_bcgv_t get_timer_right_blinkers(){
