@@ -37,7 +37,7 @@ typedef struct {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-fsm_blinkers_state_t get_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker);
+fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker);
 
 // This function makes ONE machine state move forward by one step
 void fsm_blinker_update(fsm_blinkers_event_t *current_state, fsm_blinkers_state_t event);

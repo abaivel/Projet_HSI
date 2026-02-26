@@ -38,4 +38,4 @@ typedef struct {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-fsm_wipers_event_t get_next_event(fsm_wipers_event_t current_state);
+fsm_wipers_event_t get_wipers_next_event(fsm_wipers_event_t current_state);

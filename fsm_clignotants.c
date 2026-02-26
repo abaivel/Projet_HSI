@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include "fsm_clignotants.h"
 
-
 /* Callback functions called on transitions */
 
 static int FsmError(void) { };
@@ -41,7 +40,7 @@ tTransition trans[] = {
 
 #define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
 
-fsm_blinkers_state_t get_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker) {
+fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker) {
     int event = EV_NONE;
     cmd_t cmd;
     acq_t acq;

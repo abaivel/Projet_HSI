@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include "fsm_feux.h"
 
-
 /* Callback functions called on transitions */
 
 static int FsmError(void) { };

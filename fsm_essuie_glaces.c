@@ -97,7 +97,7 @@ int main(void)
     while (state != ST_TERM) {
         
         /* Get event */
-        event = get_next_event(state);
+        event = get_wipers_next_event(state);
         
         /* For each transitions */
         for (i = 0; i < TRANS_COUNT; i++) {
