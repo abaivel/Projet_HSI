@@ -39,6 +39,7 @@ void print_message(serial_frame_t message[], int size_message){
 void translate_serial(uint8_t trame){
     if (trame >= 128){
         trame -= 128;
+    }else{
     }
     if (trame >= 64){
         trame -=64;
@@ -60,9 +61,9 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 8){
         trame -= 8;
-        set_cmd_hazard_lights(1);
+        set_cmd_right_blinkers(1);
     }else{
-        set_cmd_hazard_lights(0);
+        set_cmd_right_blinkers(0);
     }
     if (trame >= 4){
         trame -= 4;
@@ -72,9 +73,9 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 2){
         trame -= 2;
-        set_cmd_right_blinkers(1);
+        
     }else{
-        set_cmd_right_blinkers(0);
+        
     }
     if (trame == 1){
         trame -= 1;
@@ -225,15 +226,6 @@ void send_trame(int32_t fd_trame){
     }
     if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
-    }
-    if (get_acq_hazard_lights()==1 && get_cmd_hazard_lights()==1){
-        udpFrame[0]+=16;
-    }
-    if (get_acq_left_blinkers()==1 && get_cmd_left_blinkers()==1){
-        udpFrame[0]+=8;
-    }
-    if (get_acq_right_blinkers()==1 && get_cmd_right_blinkers()==1){
-        udpFrame[0]+=4;
     }
 
     int32_t res_udp = drv_write_udp_200ms(fd_trame, udpFrame);

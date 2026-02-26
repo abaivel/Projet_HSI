@@ -135,7 +135,7 @@ fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
         }
         if (timer >= 10) {
             if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0); 
+                set_timer_hazard_lights(0);
             }else if (which_blinker == LEFT_BLINKERS){
                 set_timer_left_blinkers(0);
             }else if (which_blinker == RIGHT_BLINKERS){
