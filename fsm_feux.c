@@ -66,10 +66,7 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
             break;
 
         case ST_ALLUMES:
-            if (cmd == 1) return EV_CMD1;
-            if (cmd == 0) return EV_CMD0;
-
-            if (acq == 1) {
+        if (acq == 1) {
                 if (which_light == POSITION_LIGHTS){
                     set_timer_position_lights(0); // Reset the timer because recieved
                 }else if (which_light == LOW_BEAMS_HEADLIGHTS){
@@ -99,6 +96,8 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
                     set_timer_high_beams_headlights(timer + 1);
                 }
             }
+            if (cmd == 1) return EV_CMD1;
+            if (cmd == 0) return EV_CMD0;
             break;
 
         case ST_ACQUITTES:

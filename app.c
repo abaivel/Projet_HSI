@@ -39,7 +39,9 @@ void print_message(serial_frame_t message[], int size_message){
 void translate_serial(uint8_t trame){
     if (trame >= 128){
         trame -= 128;
+        set_cmd_hazard_lights(1);
     }else{
+        set_cmd_hazard_lights(0);
     }
     if (trame >= 64){
         trame -=64;
@@ -80,6 +82,7 @@ void translate_serial(uint8_t trame){
     if (trame == 1){
         trame -= 1;
     }
+
 }
 
 void receive_udp_frame(int32_t fd_trame){
@@ -92,13 +95,14 @@ void receive_udp_frame(int32_t fd_trame){
             //print_trame(trame,15);
             int32_t res = drv_read_ser(fd_trame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
+                int acq_blk_right =2, acq_blk_left=2;
                 for (int i = 0; i<serialDataLen;i++){
                     serial_frame_t message = messages[i];
-                    if (message.frameSize == 1){
+                    if (message.serNum == SER_NUM_COMODO){
                         //printf("serNum=%d\n", message.serNum);
                         print_trame(message.frame,message.frameSize);
                         translate_serial(message.frame[0]);
-                    }else if (message.frameSize > 1){
+                    }else if (message.serNum == SER_NUM_BGF){
                         printf("ACQ:\n");
                         print_trame(message.frame,message.frameSize);
                         switch (message.frame[0])
@@ -114,15 +118,25 @@ void receive_udp_frame(int32_t fd_trame){
                             set_acq_high_beams_headlights(message.frame[1]);
                             break;
                         case 4:
-                            set_acq_hazard_lights(message.frame[1]);
+                            //set_acq_right_blinkers(message.frame[1]);
+                            acq_blk_right = 1;
+                            break;
                         case 5:
-                            set_acq_left_blinkers(message.frame[1]);
-                        case 6:
-                            set_acq_right_blinkers(message.frame[1]);
+                            //set_acq_left_blinkers(message.frame[1]);
+                            acq_blk_left = 1;
+                            break;
+                        
                         default:
                             break;
                         }
                     }
+                }
+                if (acq_blk_left !=2 && acq_blk_right !=2 && acq_blk_left == acq_blk_right){
+                    set_acq_hazard_lights(acq_blk_left);
+                }else if (acq_blk_right != 2){
+                    set_acq_right_blinkers(acq_blk_right);
+                }else if (acq_blk_left != 2){
+                    set_acq_left_blinkers(acq_blk_left);
                 }
             }
             return;
@@ -133,13 +147,13 @@ void receive_udp_frame(int32_t fd_trame){
 void send_trame(int32_t fd_trame){
     if (previous_state_position != state_position){
         serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
+        serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (get_cmd_position_lights()==0){
-            serialData[0].frame[0]=1;
+        if (state_position == ST_ETEINTS || state_position == ST_ERREUR){
+            serialData[0].frame[0]=POSITION_LIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
-            serialData[0].frame[0]=1;
+            serialData[0].frame[0]=POSITION_LIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
@@ -147,13 +161,13 @@ void send_trame(int32_t fd_trame){
     }
     if (previous_state_low_beams != state_low_beams){
         serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
+        serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (get_cmd_low_beams_headlights()==0){
-            serialData[0].frame[0]=2;
+        if (state_low_beams == ST_ETEINTS || state_low_beams == ST_ERREUR){
+            serialData[0].frame[0]=LOW_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
-            serialData[0].frame[0]=2;
+            serialData[0].frame[0]=LOW_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
@@ -161,27 +175,47 @@ void send_trame(int32_t fd_trame){
     }
     if (previous_state_high_beams != state_high_beams){
         serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
+        serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (get_cmd_high_beams_headlights()==0){
-            serialData[0].frame[0]=3;
+        if (state_high_beams == ST_ETEINTS || state_high_beams == ST_ERREUR){
+            serialData[0].frame[0]=HIGH_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
-            serialData[0].frame[0]=3;
+            serialData[0].frame[0]=HIGH_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     if (previous_state_hazard_lights != state_hazard_lights){
-        serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
+        serial_frame_t serialData[2];
+        serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (get_cmd_hazard_lights()==0){
-            serialData[0].frame[0]=4;
+        serialData[1].serNum = SER_NUM_BGF;
+        serialData[1].frameSize = 2;
+        if (state_hazard_lights == ST_BLINKERS_ETEINTS || state_hazard_lights == ST_BLINKERS_ACTIVES_ETEINTS || state_hazard_lights == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_hazard_lights == ST_BLINKERS_ERREUR){
+            serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
+            serialData[0].frame[1]=0;
+            serialData[1].frame[0]=LEFT_BLINKERS_ACTIVATION;
+            serialData[1].frame[1]=0;
+        }else{
+            serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
+            serialData[0].frame[1]=1;
+            serialData[1].frame[0]=LEFT_BLINKERS_ACTIVATION;
+            serialData[1].frame[1]=1;
+        }
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        int32_t res_ser = drv_write_ser(fd_trame, serialData, 2);
+    }
+    if (previous_state_right_blinkers != state_right_blinkers){
+        serial_frame_t serialData[1];
+        serialData[0].serNum = SER_NUM_BGF;
+        serialData[0].frameSize = 2;
+        if (state_right_blinkers == ST_BLINKERS_ETEINTS || state_right_blinkers == ST_BLINKERS_ACTIVES_ETEINTS || state_right_blinkers == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_right_blinkers == ST_BLINKERS_ERREUR){
+            serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
-            serialData[0].frame[0]=4;
+            serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
@@ -189,27 +223,13 @@ void send_trame(int32_t fd_trame){
     }
     if (previous_state_left_blinkers != state_left_blinkers){
         serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
+        serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (get_cmd_left_blinkers()==0){
-            serialData[0].frame[0]=5;
+        if (state_left_blinkers == ST_BLINKERS_ETEINTS || state_left_blinkers == ST_BLINKERS_ACTIVES_ETEINTS || state_left_blinkers == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_left_blinkers == ST_BLINKERS_ERREUR){
+            serialData[0].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
-            serialData[0].frame[0]=5;
-            serialData[0].frame[1]=1;
-        }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
-    }
-    if (previous_state_right_blinkers != state_right_blinkers){
-        serial_frame_t serialData[1];
-        serialData[0].serNum = 11;
-        serialData[0].frameSize = 2;
-        if (get_cmd_right_blinkers()==0){
-            serialData[0].frame[0]=6;
-            serialData[0].frame[1]=0;
-        }else{
-            serialData[0].frame[0]=6;
+            serialData[0].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
@@ -238,9 +258,9 @@ void init_comm(){
 int main(){
     int32_t fd_trame = drv_open();
 
-    printf("state_position : %d\n", state_position);
+    /*printf("state_position : %d\n", state_position);
     printf("state_low_beams : %d\n", state_low_beams);
-    printf("state_high_beams : %d\n", state_high_beams);
+    printf("state_high_beams : %d\n", state_high_beams);*/
     printf("state_hazard_lights : %d\n", state_hazard_lights);
     printf("state_left_blinkers : %d\n", state_left_blinkers);
     printf("state_right_blinkers : %d\n", state_right_blinkers);
@@ -276,9 +296,9 @@ int main(){
         fsm_blinkers_event_t ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
         fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
 
-        printf("state_position : %d\n", state_position);
+        /*printf("state_position : %d\n", state_position);
         printf("state_low_beams : %d\n", state_low_beams);
-        printf("state_high_beams : %d\n", state_high_beams);
+        printf("state_high_beams : %d\n", state_high_beams);*/
         printf("state_hazard_lights : %d\n", state_hazard_lights);
         printf("state_left_blinkers : %d\n", state_left_blinkers);
         printf("state_right_blinkers : %d\n", state_right_blinkers);
