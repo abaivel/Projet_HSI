@@ -56,7 +56,7 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
     switch (current_state) {
         case ST_ETEINTS:
             if (which_light == POSITION_LIGHTS){
-                    set_acq_position_lights(0);
+                set_acq_position_lights(0);
             }else if (which_light == LOW_BEAMS_HEADLIGHTS){
                 set_acq_low_beams_headlights(0);
             }else{

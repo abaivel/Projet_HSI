@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "bcgv_lib.h"
 
 /* States */
 typedef enum {
@@ -69,20 +70,58 @@ tTransition trans[] = {
 int get_next_event(int current_state)
 {
     int event = EV_NONE;
+    cmd_t cmd_wp, cmd_ww;
+    timer_bcgv_t timer;
+    
+    cmd_wp = get_cmd_wipers();
+    cmd_ww = get_cmd_windshield_washer();
 
-    /* Here, you can get the parameters of your FSM */
-
-    /* Build all the events */
-
-    /* Example code : 
-    if (PARAM1 == ...) {
-        event = EV_EVENT1
+    if (current_state == ST_INIT) {
+        current_state = ST_TOUT_ETEINTS;
     }
-    else if (PARAM2 == ... && PARAM3 == ...) {
-        event = EV_EVENT2
+
+    switch (current_state) {
+        case ST_TOUT_ETEINTS:
+            if (cmd_wp == 0 && cmd_ww == 0){
+                return EV_CMD_EG0_CMD_LG0;
+            }else if (cmd_ww == 1) {
+                return EV_CMD_LG1;
+            }else if (cmd_wp == 1) {
+                return EV_CMD_EG1;
+            }
+            break;   
+        case ST_ESSUIE_GLACES_ACTIVES:
+            if (cmd_ww == 1) {
+                return EV_CMD_LG1;
+            }else if (cmd_wp == 1) {
+                return EV_CMD_EG1;
+            }else if (cmd_wp == 0) {
+                return EV_CMD_EG0;
+            }
+            break;   
+        case ST_TOUT_ACTIVES:
+            if (cmd_ww == 1){
+                return EV_CMD_LG1;
+            }else if (cmd_ww == 0) {
+                set_timer_wipers(0);
+                return EV_CMD_LG0;
+            }
+            break; 
+        case ST_TIMER_ETEINTS:
+            if (cmd_ww == 1){
+                return EV_CMD_LG1;
+            }
+            if (timer >= 20) { // Timeout managment (2s = 20 * 100ms)
+                set_timer_wipers(0);
+                return EV_MORE_2SEC;
+            }else {
+                set_timer_wipers(timer + 1);
+                return EV_LESS_2SEC;
+            }
+            break;            
+        default:
+            break;
     }
-    ...
-    */
     return event;
 }
 
