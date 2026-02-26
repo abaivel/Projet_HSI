@@ -3,21 +3,21 @@
 #include "drv_api.h"
 #include "fsm_feux.h"
 #include "fsm_clignotants.h"
-#include "fsm_essuie_glaces.h"
+//#include "fsm_essuie_glaces.h"
 
 static fsm_feux_state_t state_position = ST_ETEINTS;
 static fsm_feux_state_t state_low_beams = ST_ETEINTS;
 static fsm_feux_state_t state_high_beams = ST_ETEINTS;
-static fsm_blinkers_state_t state_hazard_lights = ST_ETEINTS;
-static fsm_blinkers_state_t state_left_blinkers = ST_ETEINTS;
-static fsm_blinkers_state_t state_right_blinkers = ST_ETEINTS;
+static fsm_blinkers_state_t state_hazard_lights = ST_BLINKERS_ETEINTS;
+static fsm_blinkers_state_t state_left_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_blinkers_state_t state_right_blinkers = ST_BLINKERS_ETEINTS;
 
 static fsm_feux_state_t previous_state_position = ST_ETEINTS;
 static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
 static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
-static fsm_blinkers_state_t previous_state_hazard_lights = ST_ETEINTS;
-static fsm_blinkers_state_t previous_state_left_blinkers = ST_ETEINTS;
-static fsm_blinkers_state_t previous_state_right_blinkers = ST_ETEINTS;
+static fsm_blinkers_state_t previous_state_hazard_lights = ST_BLINKERS_ETEINTS;
+static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_ETEINTS;
 
 static int index = 0;
 
@@ -60,12 +60,21 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 8){
         trame -= 8;
+        set_cmd_hazard_lights(1);
+    }else{
+        set_cmd_hazard_lights(0);
     }
     if (trame >= 4){
         trame -= 4;
+        set_cmd_left_blinkers(1);
+    }else{
+        set_cmd_left_blinkers(0);
     }
     if (trame >= 2){
         trame -= 2;
+        set_cmd_right_blinkers(1);
+    }else{
+        set_cmd_right_blinkers(0);
     }
     if (trame == 1){
         trame -= 1;
@@ -103,6 +112,12 @@ void receive_udp_frame(int32_t fd_trame){
                         case 3:
                             set_acq_high_beams_headlights(message.frame[1]);
                             break;
+                        case 4:
+                            set_acq_hazard_lights(message.frame[1]);
+                        case 5:
+                            set_acq_left_blinkers(message.frame[1]);
+                        case 6:
+                            set_acq_right_blinkers(message.frame[1]);
                         default:
                             break;
                         }
@@ -157,6 +172,49 @@ void send_trame(int32_t fd_trame){
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
+    if (previous_state_hazard_lights != state_hazard_lights){
+        serial_frame_t serialData[1];
+        serialData[0].serNum = 11;
+        serialData[0].frameSize = 2;
+        if (get_cmd_hazard_lights()==0){
+            serialData[0].frame[0]=4;
+            serialData[0].frame[1]=0;
+        }else{
+            serialData[0].frame[0]=4;
+            serialData[0].frame[1]=1;
+        }
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+    }
+    if (previous_state_left_blinkers != state_left_blinkers){
+        serial_frame_t serialData[1];
+        serialData[0].serNum = 11;
+        serialData[0].frameSize = 2;
+        if (get_cmd_left_blinkers()==0){
+            serialData[0].frame[0]=5;
+            serialData[0].frame[1]=0;
+        }else{
+            serialData[0].frame[0]=5;
+            serialData[0].frame[1]=1;
+        }
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+    }
+    if (previous_state_right_blinkers != state_right_blinkers){
+        serial_frame_t serialData[1];
+        serialData[0].serNum = 11;
+        serialData[0].frameSize = 2;
+        if (get_cmd_right_blinkers()==0){
+            serialData[0].frame[0]=6;
+            serialData[0].frame[1]=0;
+        }else{
+            serialData[0].frame[0]=6;
+            serialData[0].frame[1]=1;
+        }
+        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+    }
+    
     
     uint8_t udpFrame[10]={0};
     if (get_acq_position_lights()==1 && get_cmd_position_lights()==1){
@@ -167,6 +225,15 @@ void send_trame(int32_t fd_trame){
     }
     if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
+    }
+    if (get_acq_hazard_lights()==1 && get_cmd_hazard_lights()==1){
+        udpFrame[0]+=16;
+    }
+    if (get_acq_left_blinkers()==1 && get_cmd_left_blinkers()==1){
+        udpFrame[0]+=8;
+    }
+    if (get_acq_right_blinkers()==1 && get_cmd_right_blinkers()==1){
+        udpFrame[0]+=4;
     }
 
     int32_t res_udp = drv_write_udp_200ms(fd_trame, udpFrame);
@@ -182,6 +249,9 @@ int main(){
     printf("state_position : %d\n", state_position);
     printf("state_low_beams : %d\n", state_low_beams);
     printf("state_high_beams : %d\n", state_high_beams);
+    printf("state_hazard_lights : %d\n", state_hazard_lights);
+    printf("state_left_blinkers : %d\n", state_left_blinkers);
+    printf("state_right_blinkers : %d\n", state_right_blinkers);
 
     while (1){
         
@@ -202,9 +272,24 @@ int main(){
         fsm_feux_event_t ev_route = get_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
         fsm_update(&state_high_beams, ev_route);
 
+        previous_state_hazard_lights = state_hazard_lights;
+        fsm_blinkers_event_t ev_haz = get_blinkers_next_event(state_hazard_lights, HAZARD_LIGHTS);
+        fsm_blinkers_update(&state_hazard_lights, ev_haz);
+
+        previous_state_left_blinkers = state_left_blinkers;
+        fsm_blinkers_event_t ev_left_blink = get_blinkers_next_event(state_left_blinkers, LEFT_BLINKERS);
+        fsm_blinkers_update(&state_left_blinkers, ev_left_blink);
+
+        previous_state_right_blinkers = state_right_blinkers;
+        fsm_blinkers_event_t ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
+        fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
+
         printf("state_position : %d\n", state_position);
         printf("state_low_beams : %d\n", state_low_beams);
         printf("state_high_beams : %d\n", state_high_beams);
+        printf("state_hazard_lights : %d\n", state_hazard_lights);
+        printf("state_left_blinkers : %d\n", state_left_blinkers);
+        printf("state_right_blinkers : %d\n", state_right_blinkers);
 
         //printf("cmd_position : %d\n", get_cmd_position_lights());
 

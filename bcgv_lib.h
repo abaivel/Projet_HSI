@@ -1,3 +1,6 @@
+#ifndef BCGV_LIB_H_
+#define BCGV_LIB_H_
+
 #include <stdint.h>
 
 #define SER_NUM_BGF 11
@@ -131,3 +134,4 @@ void set_battery_problems(battery_problems_type_t new_value);
 crc8_t get_crc8();
 void set_crc8(crc8_t new_value);
 
+#endif

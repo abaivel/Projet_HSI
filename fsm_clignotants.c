@@ -17,31 +17,31 @@
 static int FsmError(void) { };
 
 /* Transition table */
-tTransition trans[] = {
+tBlinkersTransition transBlinkers[] = {
     /* These are examples */
-    { ST_INIT, EV_ANY, NULL, ST_ETEINTS},
-    { ST_ETEINTS, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ETEINTS, EV_CMD1, NULL, ST_ACTIVES_ALLUMES},
-    { ST_ACTIVES_ALLUMES, EV_CMD1, NULL, ST_ACTIVES_ALLUMES},
-    { ST_ACTIVES_ALLUMES, EV_ACQ_RECU, NULL, ST_ACQUITTES_VOYANT_ALLUME},
-    { ST_ACTIVES_ALLUMES, EV_ACQ_NON_RECU, &FsmError, ST_ERREUR},
-    { ST_ACQUITTES_VOYANT_ALLUME, EV_CMD1, NULL, ST_ACQUITTES_VOYANT_ALLUME},
-    { ST_ACQUITTES_VOYANT_ALLUME, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ACQUITTES_VOYANT_ALLUME, EV_1SEC, NULL, ST_ACTIVES_ETEINTS},
-    { ST_ACTIVES_ETEINTS, EV_CMD1, NULL, ST_ACTIVES_ETEINTS},
-    { ST_ACTIVES_ETEINTS, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ACTIVES_ETEINTS, EV_ACQ_RECU, NULL, ST_ACQUITTES_VOYANT_ETEINT},
-    { ST_ACTIVES_ETEINTS, EV_ACQ_NON_RECU, &FsmError, ST_ERREUR},
-    { ST_ACQUITTES_VOYANT_ETEINT, EV_CMD1, NULL, ST_ACQUITTES_VOYANT_ETEINT},
-    { ST_ACQUITTES_VOYANT_ETEINT, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ACQUITTES_VOYANT_ETEINT, EV_1SEC, NULL, ST_ACTIVES_ALLUMES},
-    { ST_ANY, EV_ERR, &FsmError, ST_TERM}
+    { ST_BLINKERS_INIT, EV_BLINKERS_ANY, NULL, ST_BLINKERS_ETEINTS},
+    { ST_BLINKERS_ETEINTS, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_ETEINTS},
+    { ST_BLINKERS_ETEINTS, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVES_ALLUMES},
+    { ST_BLINKERS_ACTIVES_ALLUMES, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVES_ALLUMES},
+    { ST_BLINKERS_ACTIVES_ALLUMES, EV_BLINKERS_ACQ_RECU, NULL, ST_BLINKERS_ACQUITTES_VOYANT_ALLUME},
+    { ST_BLINKERS_ACTIVES_ALLUMES, EV_BLINKERS_ACQ_NON_RECU, &FsmError, ST_BLINKERS_ERREUR},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ALLUME, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACQUITTES_VOYANT_ALLUME},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ALLUME, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_ETEINTS},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ALLUME, EV_BLINKERS_1SEC, NULL, ST_BLINKERS_ACTIVES_ETEINTS},
+    { ST_BLINKERS_ACTIVES_ETEINTS, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVES_ETEINTS},
+    { ST_BLINKERS_ACTIVES_ETEINTS, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_ETEINTS},
+    { ST_BLINKERS_ACTIVES_ETEINTS, EV_BLINKERS_ACQ_RECU, NULL, ST_BLINKERS_ACQUITTES_VOYANT_ETEINT},
+    { ST_BLINKERS_ACTIVES_ETEINTS, EV_BLINKERS_ACQ_NON_RECU, &FsmError, ST_BLINKERS_ERREUR},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ETEINT, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACQUITTES_VOYANT_ETEINT},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ETEINT, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_ETEINTS},
+    { ST_BLINKERS_ACQUITTES_VOYANT_ETEINT, EV_BLINKERS_1SEC, NULL, ST_BLINKERS_ACTIVES_ALLUMES},
+    { ST_BLINKERS_ANY, EV_BLINKERS_ERR, &FsmError, ST_BLINKERS_TERM}
 };
 
-#define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
+#define TRANS_BLINKERS_COUNT (sizeof(transBlinkers)/sizeof(*transBlinkers))
 
-fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker) {
-    int event = EV_NONE;
+fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker) {
+    int event = EV_BLINKERS_NONE;
     cmd_t cmd;
     acq_t acq;
     timer_bcgv_t timer;
@@ -61,13 +61,13 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
 
     switch (current_state)
     {
-    case ST_ETEINTS:
-        if (cmd == 0) { return EV_CMD0; }
-        if (cmd == 1) { return EV_CMD1; }
+    case ST_BLINKERS_ETEINTS:
+        if (cmd == 0) { return EV_BLINKERS_CMD0; }
+        if (cmd == 1) { return EV_BLINKERS_CMD1; }
         break;
-    case ST_ACTIVES_ALLUMES:
-        if (cmd == 0) { return EV_CMD0; }
-        if (cmd == 1) { return EV_CMD1; }
+    case ST_BLINKERS_ACTIVES_ALLUMES:
+        if (cmd == 0) { return EV_BLINKERS_CMD0; }
+        if (cmd == 1) { return EV_BLINKERS_CMD1; }
         if (acq == 1) {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(0); // Reset the timer because recieved
@@ -76,7 +76,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_ACQ_RECU;
+            return EV_BLINKERS_ACQ_RECU;
         }
         // Timeout managment (1s = 10 * 100ms)
         if (timer >= 10) {
@@ -87,7 +87,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_ACQ_NON_RECU;
+            return EV_BLINKERS_ACQ_NON_RECU;
         } else {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
@@ -98,9 +98,9 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }
         }
         break;
-    case ST_ACQUITTES_VOYANT_ALLUME:
-        if (cmd == 0) { return EV_CMD0; }
-        if (cmd == 1) { return EV_CMD1; }
+    case ST_BLINKERS_ACQUITTES_VOYANT_ALLUME:
+        if (cmd == 0) { return EV_BLINKERS_CMD0; }
+        if (cmd == 1) { return EV_BLINKERS_CMD1; }
         if (timer >= 10) {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(0); // Reset the timer because recieved
@@ -109,7 +109,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_1SEC;
+            return EV_BLINKERS_1SEC;
         } else {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
@@ -120,9 +120,9 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }
         }
         break;
-    case ST_ACTIVES_ETEINTS:
-        if (cmd == 0) { return EV_CMD0; }
-        if (cmd == 1) { return EV_CMD1; }
+    case ST_BLINKERS_ACTIVES_ETEINTS:
+        if (cmd == 0) { return EV_BLINKERS_CMD0; }
+        if (cmd == 1) { return EV_BLINKERS_CMD1; }
         if (acq == 1) {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(0);
@@ -131,7 +131,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_ACQ_RECU;
+            return EV_BLINKERS_ACQ_RECU;
         }
         if (timer >= 10) {
             if (which_blinker == HAZARD_LIGHTS){
@@ -141,7 +141,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_ACQ_NON_RECU;
+            return EV_BLINKERS_ACQ_NON_RECU;
         } else {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(timer + 1);
@@ -152,9 +152,9 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }
         }
         break;
-    case ST_ACQUITTES_VOYANT_ETEINT:
-        if (cmd == 0) { return EV_CMD0; }
-        if (cmd == 1) { return EV_CMD1; }
+    case ST_BLINKERS_ACQUITTES_VOYANT_ETEINT:
+        if (cmd == 0) { return EV_BLINKERS_CMD0; }
+        if (cmd == 1) { return EV_BLINKERS_CMD1; }
         if (timer >= 10) {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(0);
@@ -163,7 +163,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }else if (which_blinker == RIGHT_BLINKERS){
                 set_timer_right_blinkers(0);
             }
-            return EV_1SEC;
+            return EV_BLINKERS_1SEC;
         } else {
             if (which_blinker == HAZARD_LIGHTS){
                 set_timer_hazard_lights(timer + 1);
@@ -174,7 +174,7 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
             }
         }
         break;
-    case ST_ERREUR:
+    case ST_BLINKERS_ERREUR:
         break;
     default:
         break;
@@ -182,17 +182,17 @@ fsm_blinkers_state_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
 }
 
 // This function makes ONE machine state move forward by one step
-void fsm__blinker_update(fsm_blinkers_event_t *current_state, fsm_blinkers_state_t event) {
-    for (int i = 0; i < TRANS_COUNT; i++) {
+void fsm_blinkers_update(fsm_blinkers_state_t *current_state, fsm_blinkers_event_t event) {
+    for (int i = 0; i < TRANS_BLINKERS_COUNT; i++) {
         // If state is matches AND the event matches
-        if ((*current_state == trans[i].state || trans[i].state == ST_ANY) && 
-            (event == trans[i].event)) {
+        if ((*current_state == transBlinkers[i].state || transBlinkers[i].state == ST_BLINKERS_ANY) && 
+            (event == transBlinkers[i].event)) {
             
-            *current_state = trans[i].next_state;
+            *current_state = transBlinkers[i].next_state;
             
             // Execute the associated action (callback) if it exist
-            if (trans[i].callback != NULL) {
-                trans[i].callback();
+            if (transBlinkers[i].callback != NULL) {
+                transBlinkers[i].callback();
             }
             break; // Transition found, we quit the for loop
         }
