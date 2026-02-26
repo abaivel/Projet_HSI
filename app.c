@@ -2,14 +2,22 @@
 #include <stdio.h>
 #include "drv_api.h"
 #include "fsm_feux.h"
+#include "fsm_clignotants.h"
+#include "fsm_essuie_glaces.h"
 
 static fsm_feux_state_t state_position = ST_ETEINTS;
 static fsm_feux_state_t state_low_beams = ST_ETEINTS;
 static fsm_feux_state_t state_high_beams = ST_ETEINTS;
+static fsm_blinkers_state_t state_hazard_lights = ST_ETEINTS;
+static fsm_blinkers_state_t state_left_blinkers = ST_ETEINTS;
+static fsm_blinkers_state_t state_right_blinkers = ST_ETEINTS;
 
 static fsm_feux_state_t previous_state_position = ST_ETEINTS;
 static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
 static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
+static fsm_blinkers_state_t previous_state_hazard_lights = ST_ETEINTS;
+static fsm_blinkers_state_t previous_state_left_blinkers = ST_ETEINTS;
+static fsm_blinkers_state_t previous_state_right_blinkers = ST_ETEINTS;
 
 static int index = 0;
 
