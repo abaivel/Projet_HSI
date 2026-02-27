@@ -34,8 +34,10 @@ typedef struct {
     fsm_wipers_event_t event;
     int (*callback)(void);
     int next_state;
-} tTransition;
+} tWipersTransition;
 
-#define TRANS_COUNT (sizeof(transWipers)/sizeof(*transWipers))
+#define TRANS_WIPERS_COUNT (sizeof(transWipers)/sizeof(*transWipers))
 
 fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state);
+
+void fsm_wipers_update(fsm_wipers_state_t *current_state, fsm_wipers_event_t event);

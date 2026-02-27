@@ -4,7 +4,6 @@
 #include "fsm_feux.h"
 #include "fsm_clignotants.h"
 #include "fsm_essuie_glaces.h"
-//#include "fsm_essuie_glaces.h"
 
 static fsm_feux_state_t state_position = ST_ETEINTS;
 static fsm_feux_state_t state_low_beams = ST_ETEINTS;
@@ -241,7 +240,25 @@ void send_trame(int32_t fd_trame){
         printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
-    
+    if (previous_state_wipers != state_wipers){
+        serial_frame_t serialData[2];
+        int frame_count = 0;
+        int wipers_on = (state_wipers == ST_WIPERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS);
+        int washers_on = (state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS);
+        serialData[frame_count].serNum = SER_NUM_BGF;
+        serialData[frame_count].frameSize = 2;
+        serialData[frame_count].frame[0] = 6;
+        serialData[frame_count].frame[1] = wipers_on;
+        frame_count++;
+
+        serialData[frame_count].serNum = SER_NUM_BGF;
+        serialData[frame_count].frameSize = 2;
+        serialData[frame_count].frame[0] = 7;
+        serialData[frame_count].frame[1] = washers_on;
+        frame_count++;
+
+        int32_t res_ser = drv_write_ser(fd_trame, serialData, frame_count);
+    }
     
     uint8_t udpFrame[10]={0};
     if (get_acq_position_lights()==1 && get_cmd_position_lights()==1){
@@ -252,6 +269,12 @@ void send_trame(int32_t fd_trame){
     }
     if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
+    }
+    if (state_wipers == ST_WIPERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+        udpFrame[1] += 2;
+    }
+    if (state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+        udpFrame[1] += 1;
     }
 
     int32_t res_udp = drv_write_udp_200ms(fd_trame, udpFrame);
@@ -266,10 +289,11 @@ int main(){
 
     /*printf("state_position : %d\n", state_position);
     printf("state_low_beams : %d\n", state_low_beams);
-    printf("state_high_beams : %d\n", state_high_beams);*/
+    printf("state_high_beams : %d\n", state_high_beams);
     printf("state_hazard_lights : %d\n", state_hazard_lights);
     printf("state_left_blinkers : %d\n", state_left_blinkers);
-    printf("state_right_blinkers : %d\n", state_right_blinkers);
+    printf("state_right_blinkers : %d\n", state_right_blinkers);*/
+    printf("state_wipers : %d\n", state_wipers);
 
     while (1){
         
@@ -301,15 +325,18 @@ int main(){
         previous_state_right_blinkers = state_right_blinkers;
         fsm_blinkers_event_t ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
         fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
+        
+        previous_state_wipers = state_wipers;
+        fsm_wipers_event_t ev_wipers = get_wipers_next_event(state_wipers);
+        fsm_wipers_update(&state_wipers, ev_wipers);
 
         /*printf("state_position : %d\n", state_position);
         printf("state_low_beams : %d\n", state_low_beams);
-        printf("state_high_beams : %d\n", state_high_beams);*/
+        printf("state_high_beams : %d\n", state_high_beams);
         printf("state_hazard_lights : %d\n", state_hazard_lights);
         printf("state_left_blinkers : %d\n", state_left_blinkers);
-        printf("state_right_blinkers : %d\n", state_right_blinkers);
-
-        //printf("cmd_position : %d\n", get_cmd_position_lights());
+        printf("state_right_blinkers : %d\n", state_right_blinkers);*/
+        printf("state_wipers : %d\n", state_wipers);
 
         send_trame(fd_trame);
     }
