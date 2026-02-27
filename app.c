@@ -3,6 +3,7 @@
 #include "drv_api.h"
 #include "fsm_feux.h"
 #include "fsm_clignotants.h"
+#include "fsm_essuie_glaces.h"
 //#include "fsm_essuie_glaces.h"
 
 static fsm_feux_state_t state_position = ST_ETEINTS;
@@ -11,6 +12,7 @@ static fsm_feux_state_t state_high_beams = ST_ETEINTS;
 static fsm_blinkers_state_t state_hazard_lights = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t state_left_blinkers = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t state_right_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_wipers_state_t state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
 
 static fsm_feux_state_t previous_state_position = ST_ETEINTS;
 static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
@@ -18,6 +20,7 @@ static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
 static fsm_blinkers_state_t previous_state_hazard_lights = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
 
 static int index = 0;
 
@@ -75,12 +78,15 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 2){
         trame -= 2;
-        
+        set_cmd_wipers(1);
     }else{
-        
+        set_cmd_wipers(0);
     }
     if (trame == 1){
         trame -= 1;
+        set_cmd_windshield_washer(1);
+    }else{
+        set_cmd_windshield_washer(0);
     }
 
 }
