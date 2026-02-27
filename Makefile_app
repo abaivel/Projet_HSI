@@ -1,7 +1,7 @@
 all: app
 
 app: app.c fsm_feux.c
-	gcc app.c fsm_feux.c fsm_clignotants.c bcgv_lib.a drv_api.a -o app
+	gcc app.c fsm_feux.c fsm_essuie_glaces.c fsm_clignotants.c bcgv_lib.a drv_api.a -o app
 
 clean:
 	rm -f app *.o
