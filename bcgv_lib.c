@@ -8,12 +8,12 @@ static cmd_t cmd_right_blinkers = 0;
 static cmd_t cmd_left_blinkers = 0;
 static cmd_t cmd_wipers = 0;
 static cmd_t cmd_windshield_washer = 0;
-static acq_t acq_position_lights = 0;
-static acq_t acq_low_beams_headlights = 0;
-static acq_t acq_high_beams_headlights = 0;
-static acq_t acq_right_blinkers = 0;
-static acq_t acq_left_blinkers = 0;
-static acq_t acq_hazard_lights = 0;
+static ack_t ack_position_lights = 0;
+static ack_t ack_low_beams_headlights = 0;
+static ack_t ack_high_beams_headlights = 0;
+static ack_t ack_right_blinkers = 0;
+static ack_t ack_left_blinkers = 0;
+static ack_t ack_hazard_lights = 0;
 static timer_bcgv_t timer_position_lights = 0;
 static timer_bcgv_t timer_low_beams_headlights = 0;
 static timer_bcgv_t timer_high_beams_headlights = 0;
@@ -112,63 +112,63 @@ void set_cmd_windshield_washer(cmd_t new_value){
   }
 }
 
-acq_t get_acq_position_lights(){
-  return acq_position_lights;
+ack_t get_ack_position_lights(){
+  return ack_position_lights;
 }
 
-void set_acq_position_lights(acq_t new_value){
+void set_ack_position_lights(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_position_lights = new_value;
+      ack_position_lights = new_value;
   }
 }
 
-acq_t get_acq_low_beams_headlights(){
-  return acq_low_beams_headlights;
+ack_t get_ack_low_beams_headlights(){
+  return ack_low_beams_headlights;
 }
 
-void set_acq_low_beams_headlights(acq_t new_value){
+void set_ack_low_beams_headlights(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_low_beams_headlights = new_value;
+      ack_low_beams_headlights = new_value;
   }
 }
 
-acq_t get_acq_high_beams_headlights(){
-  return acq_high_beams_headlights;
+ack_t get_ack_high_beams_headlights(){
+  return ack_high_beams_headlights;
 }
 
-void set_acq_high_beams_headlights(acq_t new_value){
+void set_ack_high_beams_headlights(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_high_beams_headlights = new_value;
+      ack_high_beams_headlights = new_value;
   }
 }
 
-acq_t get_acq_right_blinkers(){
-  return acq_right_blinkers;
+ack_t get_ack_right_blinkers(){
+  return ack_right_blinkers;
 }
 
-void set_acq_right_blinkers(acq_t new_value){
+void set_ack_right_blinkers(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_right_blinkers = new_value;
+      ack_right_blinkers = new_value;
   }
 }
 
-acq_t get_acq_left_blinkers(){
-  return acq_left_blinkers;
+ack_t get_ack_left_blinkers(){
+  return ack_left_blinkers;
 }
 
-void set_acq_left_blinkers(acq_t new_value){
+void set_ack_left_blinkers(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_left_blinkers = new_value;
+      ack_left_blinkers = new_value;
   }
 }
 
-acq_t get_acq_hazard_lights(){
-  return acq_hazard_lights;
+ack_t get_ack_hazard_lights(){
+  return ack_hazard_lights;
 }
 
-void set_acq_hazard_lights(acq_t new_value){
+void set_ack_hazard_lights(ack_t new_value){
   if (new_value >= 0 && new_value <= 1){
-      acq_hazard_lights = new_value;
+      ack_hazard_lights = new_value;
   }
 }
 

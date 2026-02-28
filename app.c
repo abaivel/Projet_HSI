@@ -1,26 +1,26 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "drv_api.h"
-#include "fsm_feux.h"
-#include "fsm_clignotants.h"
-#include "fsm_essuie_glaces.h"
+#include "fsm_lights.h"
+#include "fsm_blinkers.h"
+#include "fsm_wipers.h"
 #include "checksum.h"
 
-static fsm_feux_state_t state_position = ST_ETEINTS;
-static fsm_feux_state_t state_low_beams = ST_ETEINTS;
-static fsm_feux_state_t state_high_beams = ST_ETEINTS;
-static fsm_blinkers_state_t state_hazard_lights = ST_BLINKERS_ETEINTS;
-static fsm_blinkers_state_t state_left_blinkers = ST_BLINKERS_ETEINTS;
-static fsm_blinkers_state_t state_right_blinkers = ST_BLINKERS_ETEINTS;
-static fsm_wipers_state_t state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
+static fsm_lights_state_t state_position = ST_LIGHTS_OFF;
+static fsm_lights_state_t state_low_beams = ST_LIGHTS_OFF;
+static fsm_lights_state_t state_high_beams = ST_LIGHTS_OFF;
+static fsm_blinkers_state_t state_hazard_lights = ST_BLINKERS_OFF;
+static fsm_blinkers_state_t state_left_blinkers = ST_BLINKERS_OFF;
+static fsm_blinkers_state_t state_right_blinkers = ST_BLINKERS_OFF;
+static fsm_wipers_state_t state_wipers = ST_WIPERS_WASHERS_ALL_OFF;
 
-static fsm_feux_state_t previous_state_position = ST_ETEINTS;
-static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
-static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
-static fsm_blinkers_state_t previous_state_hazard_lights = ST_BLINKERS_ETEINTS;
-static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_ETEINTS;
-static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_ETEINTS;
-static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
+static fsm_lights_state_t previous_state_position = ST_LIGHTS_OFF;
+static fsm_lights_state_t previous_state_low_beams = ST_LIGHTS_OFF;
+static fsm_lights_state_t previous_state_high_beams = ST_LIGHTS_OFF;
+static fsm_blinkers_state_t previous_state_hazard_lights = ST_BLINKERS_OFF;
+static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_OFF;
+static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_OFF;
+static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_ALL_OFF;
 
 static int index = 0;
 
@@ -127,7 +127,7 @@ void receive_udp_frame(int32_t fd_trame){
             //print_trame(trame,15);
             int32_t res = drv_read_ser(fd_trame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
-                int acq_blk_right =2, acq_blk_left=2;
+                int ack_blk_right =2, ack_blk_left=2;
                 for (int i = 0; i<serialDataLen;i++){
                     serial_frame_t message = messages[i];
                     if (message.serNum == SER_NUM_COMODO){
@@ -135,26 +135,26 @@ void receive_udp_frame(int32_t fd_trame){
                         //print_trame(message.frame,message.frameSize);
                         translate_serial(message.frame[0]);
                     }else if (message.serNum == SER_NUM_BGF){
-                        /*printf("ACQ:\n");
+                        /*printf("ack:\n");
                         print_trame(message.frame,message.frameSize);*/
                         switch (message.frame[0])
                         {
                         case 1:
-                            set_acq_position_lights(message.frame[1]);
+                            set_ack_position_lights(message.frame[1]);
                             break;
                         case 2:
-                            set_acq_low_beams_headlights(message.frame[1]);
+                            set_ack_low_beams_headlights(message.frame[1]);
                             break;
                         case 3:
-                            set_acq_high_beams_headlights(message.frame[1]);
+                            set_ack_high_beams_headlights(message.frame[1]);
                             break;
                         case 4:
-                            //set_acq_right_blinkers(message.frame[1]);
-                            acq_blk_right = 1;
+                            //set_ack_right_blinkers(message.frame[1]);
+                            ack_blk_right = 1;
                             break;
                         case 5:
-                            //set_acq_left_blinkers(message.frame[1]);
-                            acq_blk_left = 1;
+                            //set_ack_left_blinkers(message.frame[1]);
+                            ack_blk_left = 1;
                             break;
                         
                         default:
@@ -162,12 +162,12 @@ void receive_udp_frame(int32_t fd_trame){
                         }
                     }
                 }
-                if (acq_blk_left !=2 && acq_blk_right !=2 && acq_blk_left == acq_blk_right){
-                    set_acq_hazard_lights(acq_blk_left);
-                }else if (acq_blk_right != 2){
-                    set_acq_right_blinkers(acq_blk_right);
-                }else if (acq_blk_left != 2){
-                    set_acq_left_blinkers(acq_blk_left);
+                if (ack_blk_left !=2 && ack_blk_right !=2 && ack_blk_left == ack_blk_right){
+                    set_ack_hazard_lights(ack_blk_left);
+                }else if (ack_blk_right != 2){
+                    set_ack_right_blinkers(ack_blk_right);
+                }else if (ack_blk_left != 2){
+                    set_ack_left_blinkers(ack_blk_left);
                 }
             }else if (trame[14]!=crc_8(trame,14)){
                 printf("UDP TRAME NOT TRANSLATED BECAUSE CRC8\n");
@@ -182,7 +182,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (state_position == ST_ETEINTS || state_position == ST_ERREUR){
+        if (state_position == ST_LIGHTS_OFF || state_position == ST_LIGHTS_ERROR){
             serialData[0].frame[0]=POSITION_LIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
@@ -196,7 +196,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (state_low_beams == ST_ETEINTS || state_low_beams == ST_ERREUR){
+        if (state_low_beams == ST_LIGHTS_OFF || state_low_beams == ST_LIGHTS_ERROR){
             serialData[0].frame[0]=LOW_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
@@ -210,7 +210,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (state_high_beams == ST_ETEINTS || state_high_beams == ST_ERREUR){
+        if (state_high_beams == ST_LIGHTS_OFF || state_high_beams == ST_LIGHTS_ERROR){
             serialData[0].frame[0]=HIGH_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
@@ -226,7 +226,7 @@ void send_trame(int32_t fd_trame){
         serialData[0].frameSize = 2;
         serialData[1].serNum = SER_NUM_BGF;
         serialData[1].frameSize = 2;
-        if (state_hazard_lights == ST_BLINKERS_ETEINTS || state_hazard_lights == ST_BLINKERS_ACTIVES_ETEINTS || state_hazard_lights == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_hazard_lights == ST_BLINKERS_ERREUR){
+        if (state_hazard_lights == ST_BLINKERS_OFF || state_hazard_lights == ST_BLINKERS_ACTIVATED_OFF || state_hazard_lights == ST_BLINKERS_ACK_OFF || state_hazard_lights == ST_BLINKERS_ERROR){
             serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=0;
             serialData[1].frame[0]=LEFT_BLINKERS_ACTIVATION;
@@ -244,7 +244,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (state_right_blinkers == ST_BLINKERS_ETEINTS || state_right_blinkers == ST_BLINKERS_ACTIVES_ETEINTS || state_right_blinkers == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_right_blinkers == ST_BLINKERS_ERREUR){
+        if (state_right_blinkers == ST_BLINKERS_OFF || state_right_blinkers == ST_BLINKERS_ACTIVATED_OFF || state_right_blinkers == ST_BLINKERS_ACK_OFF || state_right_blinkers == ST_BLINKERS_ERROR){
             serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
@@ -258,7 +258,7 @@ void send_trame(int32_t fd_trame){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
-        if (state_left_blinkers == ST_BLINKERS_ETEINTS || state_left_blinkers == ST_BLINKERS_ACTIVES_ETEINTS || state_left_blinkers == ST_BLINKERS_ACQUITTES_VOYANT_ETEINT || state_left_blinkers == ST_BLINKERS_ERREUR){
+        if (state_left_blinkers == ST_BLINKERS_OFF || state_left_blinkers == ST_BLINKERS_ACTIVATED_OFF || state_left_blinkers == ST_BLINKERS_ACK_OFF || state_left_blinkers == ST_BLINKERS_ERROR){
             serialData[0].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=0;
         }else{
@@ -270,13 +270,13 @@ void send_trame(int32_t fd_trame){
     }
     
     uint8_t udpFrame[10]={0};
-    if (get_acq_position_lights()==1 && get_cmd_position_lights()==1){
+    if (get_ack_position_lights()==1 && get_cmd_position_lights()==1){
         udpFrame[0]+=128;
     }
-    if (get_acq_low_beams_headlights()==1 && get_cmd_low_beams_headlights()==1){
+    if (get_ack_low_beams_headlights()==1 && get_cmd_low_beams_headlights()==1){
         udpFrame[0]+=64;
     }
-    if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
+    if (get_ack_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
     }
     if (get_tank_level() <= 2){
@@ -292,7 +292,7 @@ void send_trame(int32_t fd_trame){
         udpFrame[0]+=1;
     }
 
-    if (state_hazard_lights != ST_BLINKERS_ETEINTS && state_hazard_lights != ST_BLINKERS_ERREUR){
+    if (state_hazard_lights != ST_BLINKERS_OFF && state_hazard_lights != ST_BLINKERS_ERROR){
         udpFrame[1]+=128;
     }
     if (get_battery_problems() == FAILURE){
@@ -310,10 +310,10 @@ void send_trame(int32_t fd_trame){
     if (get_chassis_problems() == BRAKE_FAILURE){
         udpFrame[1]+=4;
     }
-    if (state_wipers == ST_WIPERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+    if (state_wipers == ST_WIPERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_OFF) {
         udpFrame[1] += 2;
     }
-    if (state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+    if (state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_OFF) {
         udpFrame[1] += 1;
     }
 
@@ -353,19 +353,19 @@ int main(){
         receive_udp_frame(fd_trame);
 
         previous_state_position = state_position;
-        fsm_feux_event_t ev_pos = get_next_event(state_position, POSITION_LIGHTS);
+        fsm_lights_event_t ev_pos = get_lights_next_event(state_position, POSITION_LIGHTS);
         //printf("ev_pos : %d\n", ev_pos);
-        fsm_update(&state_position, ev_pos);
+        fsm_lights_update(&state_position, ev_pos);
 
         // managment of low beams headlights
         previous_state_low_beams = state_low_beams;
-        fsm_feux_event_t ev_crois = get_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
-        fsm_update(&state_low_beams, ev_crois);
+        fsm_lights_event_t ev_crois = get_lights_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
+        fsm_lights_update(&state_low_beams, ev_crois);
 
         // Managment of high beams headlights
         previous_state_high_beams = state_high_beams;
-        fsm_feux_event_t ev_route = get_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
-        fsm_update(&state_high_beams, ev_route);
+        fsm_lights_event_t ev_route = get_lights_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
+        fsm_lights_update(&state_high_beams, ev_route);
 
         previous_state_hazard_lights = state_hazard_lights;
         fsm_blinkers_event_t ev_haz = get_blinkers_next_event(state_hazard_lights, HAZARD_LIGHTS);

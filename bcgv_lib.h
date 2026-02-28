@@ -7,7 +7,7 @@
 #define SER_NUM_COMODO 12
 
 typedef uint8_t cmd_t;
-typedef uint8_t acq_t;
+typedef uint8_t ack_t;
 typedef uint32_t timer_bcgv_t;
 typedef uint8_t thread_number_t;
 typedef uint32_t mileage_t;
@@ -16,33 +16,19 @@ typedef uint8_t tank_level_t;
 typedef uint32_t revolutions_minute_t;
 typedef uint8_t crc8_t;
 
-typedef enum {
-    POSITION_LIGHTS, LOW_BEAMS_HEADLIGHTS, HIGH_BEAMS_HEADLIGHTS
-} light_type_t;
+typedef enum {    POSITION_LIGHTS, LOW_BEAMS_HEADLIGHTS, HIGH_BEAMS_HEADLIGHTS} light_type_t;
 
-typedef enum {
-    RIGHT_BLINKERS, LEFT_BLINKERS, HAZARD_LIGHTS
-} blinkers_type_t;
+typedef enum {    RIGHT_BLINKERS, LEFT_BLINKERS, HAZARD_LIGHTS} blinkers_type_t;
 
-typedef enum {
-    NO_CHASSIS_PROBLEM = 0, TIRE_PRESSURE = 1, BRAKE_FAILURE = 2
-} chassis_problems_type_t;
+typedef enum {    NO_CHASSIS_PROBLEM = 0, TIRE_PRESSURE = 1, BRAKE_FAILURE = 2} chassis_problems_type_t;
 
-typedef enum {
-    NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING
-} engine_problems_type_t;
+typedef enum {    NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING} engine_problems_type_t;
 
-typedef enum {
-    NO_BATTERY_PROBLEM = 0, DISCHARGED = 1, FAILURE = 2
-} battery_problems_type_t;
+typedef enum {    NO_BATTERY_PROBLEM = 0, DISCHARGED = 1, FAILURE = 2} battery_problems_type_t;
 
-typedef enum {
-    POSITION_LIGHTS_ACTIVATION = 1, LOW_BEAMS_HEADLIGHTS_ACTIVATION = 2, HIGH_BEAMS_HEADLIGHTS_ACTIVATION = 3, RIGHT_BLINKERS_ACTIVATION = 4, LEFT_BLINKERS_ACTIVATION = 5
-} message_id_to_bgf_t;
+typedef enum {    POSITION_LIGHTS_ACTIVATION = 1, LOW_BEAMS_HEADLIGHTS_ACTIVATION = 2, HIGH_BEAMS_HEADLIGHTS_ACTIVATION = 3, RIGHT_BLINKERS_ACTIVATION = 4, LEFT_BLINKERS_ACTIVATION = 5} message_id_to_bgf_t;
 
-typedef enum {
-    OFF=0, ON=1
-} state_lights_t;
+typedef enum {    OFF=0, ON=1} state_lights_t;
 
 cmd_t get_cmd_hazard_lights();
 void set_cmd_hazard_lights(cmd_t new_value);
@@ -68,23 +54,23 @@ void set_cmd_wipers(cmd_t new_value);
 cmd_t get_cmd_windshield_washer();
 void set_cmd_windshield_washer(cmd_t new_value);
 
-acq_t get_acq_position_lights();
-void set_acq_position_lights(acq_t new_value);
+ack_t get_ack_position_lights();
+void set_ack_position_lights(ack_t new_value);
 
-acq_t get_acq_low_beams_headlights();
-void set_acq_low_beams_headlights(acq_t new_value);
+ack_t get_ack_low_beams_headlights();
+void set_ack_low_beams_headlights(ack_t new_value);
 
-acq_t get_acq_high_beams_headlights();
-void set_acq_high_beams_headlights(acq_t new_value);
+ack_t get_ack_high_beams_headlights();
+void set_ack_high_beams_headlights(ack_t new_value);
 
-acq_t get_acq_right_blinkers();
-void set_acq_right_blinkers(acq_t new_value);
+ack_t get_ack_right_blinkers();
+void set_ack_right_blinkers(ack_t new_value);
 
-acq_t get_acq_left_blinkers();
-void set_acq_left_blinkers(acq_t new_value);
+ack_t get_ack_left_blinkers();
+void set_ack_left_blinkers(ack_t new_value);
 
-acq_t get_acq_hazard_lights();
-void set_acq_hazard_lights(acq_t new_value);
+ack_t get_ack_hazard_lights();
+void set_ack_hazard_lights(ack_t new_value);
 
 timer_bcgv_t get_timer_position_lights();
 void set_timer_position_lights(timer_bcgv_t new_value);
@@ -133,5 +119,6 @@ void set_battery_problems(battery_problems_type_t new_value);
 
 crc8_t get_crc8();
 void set_crc8(crc8_t new_value);
+
 
 #endif

@@ -4,10 +4,10 @@
 typedef enum {
     ST_WIPERS_WASHERS_ANY = -1,                            /* Any state */
     ST_WIPERS_WASHERS_INIT = 0,                            /* Init state */
-    ST_WIPERS_WASHERS_TOUT_ETEINTS = 1,
+    ST_WIPERS_WASHERS_ALL_OFF = 1,
     ST_WIPERS_ACTIVE = 2,
     ST_WIPERS_WASHERS_ACTIVE = 3,
-    ST_WIPERS_WASHERS_TIMER_ETEINTS = 4,
+    ST_WIPERS_WASHERS_TIMER_OFF = 4,
     ST_WIPERS_WASHERS_TERM = 255                           /* Final state */
 } fsm_wipers_state_t;
 
