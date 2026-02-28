@@ -24,9 +24,9 @@ static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_ALL_OFF;
 
 static int index = 0;
 
-void print_trame(uint8_t trame[], int size_trame){
-    for (int i = 0;i<size_trame;i++){
-        printf("%hhu ",trame[i]);
+void print_frame(uint8_t frame[], int size_frame){
+    for (int i = 0;i<size_frame;i++){
+        printf("%hhu ",frame[i]);
     }
     printf("\n");
 }
@@ -35,55 +35,55 @@ void print_message(serial_frame_t message[], int size_message){
     for (int i=0;i<size_message;i++){
         printf("\nsize: %ld\n", message[i].frameSize);
         //printf("%d\n", message[i].serNum);
-        print_trame(message[i].frame,2);
+        print_frame(message[i].frame,2);
     }
 }
 
-void translate_serial(uint8_t trame){
-    if (trame >= 128){
-        trame -= 128;
+void translate_serial(uint8_t frame){
+    if (frame >= 128){
+        frame -= 128;
         set_cmd_hazard_lights(1);
     }else{
         set_cmd_hazard_lights(0);
     }
-    if (trame >= 64){
-        trame -=64;
+    if (frame >= 64){
+        frame -=64;
         set_cmd_position_lights(1);
     }else {
         set_cmd_position_lights(0);
     }
-    if (trame >= 32){
-        trame -= 32;
+    if (frame >= 32){
+        frame -= 32;
         set_cmd_low_beams_headlights(1);
     }else{
         set_cmd_low_beams_headlights(0);
     }
-    if (trame >= 16){
-        trame -= 16;
+    if (frame >= 16){
+        frame -= 16;
         set_cmd_high_beams_headlights(1);
     }else{
         set_cmd_high_beams_headlights(0);
     }
-    if (trame >= 8){
-        trame -= 8;
+    if (frame >= 8){
+        frame -= 8;
         set_cmd_right_blinkers(1);
     }else{
         set_cmd_right_blinkers(0);
     }
-    if (trame >= 4){
-        trame -= 4;
+    if (frame >= 4){
+        frame -= 4;
         set_cmd_left_blinkers(1);
     }else{
         set_cmd_left_blinkers(0);
     }
-    if (trame >= 2){
-        trame -= 2;
+    if (frame >= 2){
+        frame -= 2;
         set_cmd_wipers(1);
     }else{
         set_cmd_wipers(0);
     }
-    if (trame == 1){
-        trame -= 1;
+    if (frame == 1){
+        frame -= 1;
         set_cmd_windshield_washer(1);
     }else{
         set_cmd_windshield_washer(0);
@@ -91,52 +91,55 @@ void translate_serial(uint8_t trame){
 
 }
 
-void translate_udp_trame(uint8_t trame[]){
-    set_mileage(((uint32_t)trame[1] << 24) |
-    ((uint32_t)trame[2] << 16) |
-    ((uint32_t)trame[3] << 8)  |
-    ((uint32_t)trame[4]));
+void translate_udp_frame(uint8_t frame[]){
+    set_mileage(((uint32_t)frame[1] << 24) |
+    ((uint32_t)frame[2] << 16) |
+    ((uint32_t)frame[3] << 8)  |
+    ((uint32_t)frame[4]));
 
-    set_speed(trame[5]);
+    set_speed(frame[5]);
     
-    set_chassis_problems(trame[6]);
+    set_chassis_problems(frame[6]);
 
-    set_engine_problems(trame[7]);
+    set_engine_problems(frame[7]);
 
-    set_tank_level(trame[8]);
+    set_tank_level(frame[8]);
 
-    set_revolutions_minute(((uint32_t)trame[9] << 24) |
-    ((uint32_t)trame[10] << 16) |
-    ((uint32_t)trame[11] << 8)  |
-    ((uint32_t)trame[12]));
+    set_revolutions_minute(((uint32_t)frame[9] << 24) |
+    ((uint32_t)frame[10] << 16) |
+    ((uint32_t)frame[11] << 8)  |
+    ((uint32_t)frame[12]));
 
-    set_battery_problems(trame[13]);
+    set_battery_problems(frame[13]);
 
 
 }
 
-void receive_udp_frame(int32_t fd_trame){
+void receive_udp_frame(int32_t fd_frame){
+    static uint8_t previous_frame_num = 0; 
+    
     while (1){
-        uint8_t trame[15];
+        uint8_t frame[15];
         serial_frame_t messages[16];
         uint32_t serialDataLen = 16;
-        int32_t res_udp = drv_read_udp_100ms(fd_trame, trame);
-        uint8_t crc8 = crc_8(trame,14);
-        if (res_udp == DRV_SUCCESS && trame[14]==crc8){
-            translate_udp_trame(trame);
-            //print_trame(trame,15);
-            int32_t res = drv_read_ser(fd_trame, messages, &serialDataLen);
+        int32_t res_udp = drv_read_udp_100ms(fd_frame, frame);
+        uint8_t crc8 = crc_8(frame,14);
+        if (res_udp == DRV_SUCCESS && frame[14]==crc8){
+            uint8_t current_frame_num = frame[0];
+            if (current_frame_num != (uint8_t)((get_frame_number() + 1)%100)) {
+                printf("Error: Frame sequence mismatch! Expected %d, Got %d\n", 
+                       (uint8_t)((get_frame_number() + 1)%100), current_frame_num);
+            }
+            set_frame_number(current_frame_num);
+            translate_udp_frame(frame);
+            int32_t res = drv_read_ser(fd_frame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
                 int ack_blk_right =2, ack_blk_left=2;
                 for (int i = 0; i<serialDataLen;i++){
                     serial_frame_t message = messages[i];
                     if (message.serNum == SER_NUM_COMODO){
-                        //printf("serNum=%d\n", message.serNum);
-                        //print_trame(message.frame,message.frameSize);
-                        translate_serial(message.frame[0]);
+                         translate_serial(message.frame[0]);
                     }else if (message.serNum == SER_NUM_BGF){
-                        /*printf("ack:\n");
-                        print_trame(message.frame,message.frameSize);*/
                         switch (message.frame[0])
                         {
                         case 1:
@@ -149,14 +152,11 @@ void receive_udp_frame(int32_t fd_trame){
                             set_ack_high_beams_headlights(message.frame[1]);
                             break;
                         case 4:
-                            //set_ack_right_blinkers(message.frame[1]);
                             ack_blk_right = 1;
                             break;
                         case 5:
-                            //set_ack_left_blinkers(message.frame[1]);
                             ack_blk_left = 1;
                             break;
-                        
                         default:
                             break;
                         }
@@ -169,15 +169,15 @@ void receive_udp_frame(int32_t fd_trame){
                 }else if (ack_blk_left != 2){
                     set_ack_left_blinkers(ack_blk_left);
                 }
-            }else if (trame[14]!=crc_8(trame,14)){
-                printf("UDP TRAME NOT TRANSLATED BECAUSE CRC8\n");
+            }else if (frame[14]!=crc_8(frame,14)){
+                printf("UDP frame NOT TRANSLATED BECAUSE CRC8\n");
             }
             return;
         }
     }
 }
 
-void send_trame(int32_t fd_trame){
+void send_frame(int32_t fd_frame){
     if (previous_state_position != state_position){
         serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
@@ -190,7 +190,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
     }
     if (previous_state_low_beams != state_low_beams){
         serial_frame_t serialData[1];
@@ -204,7 +204,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
     }
     if (previous_state_high_beams != state_high_beams){
         serial_frame_t serialData[1];
@@ -218,7 +218,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
     }
     if (previous_state_hazard_lights != state_hazard_lights){
         serial_frame_t serialData[2];
@@ -238,7 +238,7 @@ void send_trame(int32_t fd_trame){
             serialData[1].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 2);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 2);
     }
     if (previous_state_right_blinkers != state_right_blinkers){
         serial_frame_t serialData[1];
@@ -252,7 +252,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
     }
     if (previous_state_left_blinkers != state_left_blinkers){
         serial_frame_t serialData[1];
@@ -266,7 +266,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
+        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
     }
     
     uint8_t udpFrame[10]={0};
@@ -328,9 +328,9 @@ void send_trame(int32_t fd_trame){
     udpFrame[8] = (get_revolutions_minute()  >> 8)  & 0xFF;
     udpFrame[9] = get_revolutions_minute() & 0xFF;
 
-    //print_trame(udpFrame, 10);
+    //print_frame(udpFrame, 10);
 
-    int32_t res_udp = drv_write_udp_200ms(fd_trame, udpFrame);
+    int32_t res_udp = drv_write_udp_200ms(fd_frame, udpFrame);
 }
 
 void init_comm(){
@@ -338,7 +338,7 @@ void init_comm(){
 }
 
 int main(){
-    int32_t fd_trame = drv_open();
+    int32_t fd_frame = drv_open();
 
     /*printf("state_position : %d\n", state_position);
     printf("state_low_beams : %d\n", state_low_beams);
@@ -350,7 +350,7 @@ int main(){
 
     while (1){
         
-        receive_udp_frame(fd_trame);
+        receive_udp_frame(fd_frame);
 
         previous_state_position = state_position;
         fsm_lights_event_t ev_pos = get_lights_next_event(state_position, POSITION_LIGHTS);
@@ -391,7 +391,7 @@ int main(){
         printf("state_right_blinkers : %d\n", state_right_blinkers);
         printf("state_wipers : %d\n", state_wipers);*/
 
-        send_trame(fd_trame);
+        send_frame(fd_frame);
     }
-    drv_close(fd_trame);
+    drv_close(fd_frame);
 }
