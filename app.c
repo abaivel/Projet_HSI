@@ -3,7 +3,8 @@
 #include "drv_api.h"
 #include "fsm_feux.h"
 #include "fsm_clignotants.h"
-//#include "fsm_essuie_glaces.h"
+#include "fsm_essuie_glaces.h"
+#include "checksum.h"
 
 static fsm_feux_state_t state_position = ST_ETEINTS;
 static fsm_feux_state_t state_low_beams = ST_ETEINTS;
@@ -11,6 +12,7 @@ static fsm_feux_state_t state_high_beams = ST_ETEINTS;
 static fsm_blinkers_state_t state_hazard_lights = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t state_left_blinkers = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t state_right_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_wipers_state_t state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
 
 static fsm_feux_state_t previous_state_position = ST_ETEINTS;
 static fsm_feux_state_t previous_state_low_beams = ST_ETEINTS;
@@ -18,6 +20,7 @@ static fsm_feux_state_t previous_state_high_beams = ST_ETEINTS;
 static fsm_blinkers_state_t previous_state_hazard_lights = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_ETEINTS;
 static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_ETEINTS;
+static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_TOUT_ETEINTS;
 
 static int index = 0;
 
@@ -75,13 +78,40 @@ void translate_serial(uint8_t trame){
     }
     if (trame >= 2){
         trame -= 2;
-        
+        set_cmd_wipers(1);
     }else{
-        
+        set_cmd_wipers(0);
     }
     if (trame == 1){
         trame -= 1;
+        set_cmd_windshield_washer(1);
+    }else{
+        set_cmd_windshield_washer(0);
     }
+
+}
+
+void translate_udp_trame(uint8_t trame[]){
+    set_mileage(((uint32_t)trame[1] << 24) |
+    ((uint32_t)trame[2] << 16) |
+    ((uint32_t)trame[3] << 8)  |
+    ((uint32_t)trame[4]));
+
+    set_speed(trame[5]);
+    
+    set_chassis_problems(trame[6]);
+
+    set_engine_problems(trame[7]);
+
+    set_tank_level(trame[8]);
+
+    set_revolutions_minute(((uint32_t)trame[9] << 24) |
+    ((uint32_t)trame[10] << 16) |
+    ((uint32_t)trame[11] << 8)  |
+    ((uint32_t)trame[12]));
+
+    set_battery_problems(trame[13]);
+
 
 }
 
@@ -91,7 +121,9 @@ void receive_udp_frame(int32_t fd_trame){
         serial_frame_t messages[16];
         uint32_t serialDataLen = 16;
         int32_t res_udp = drv_read_udp_100ms(fd_trame, trame);
-        if (res_udp == DRV_SUCCESS){
+        uint8_t crc8 = crc_8(trame,14);
+        if (res_udp == DRV_SUCCESS && trame[14]==crc8){
+            translate_udp_trame(trame);
             //print_trame(trame,15);
             int32_t res = drv_read_ser(fd_trame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
@@ -100,15 +132,14 @@ void receive_udp_frame(int32_t fd_trame){
                     serial_frame_t message = messages[i];
                     if (message.serNum == SER_NUM_COMODO){
                         //printf("serNum=%d\n", message.serNum);
-                        print_trame(message.frame,message.frameSize);
+                        //print_trame(message.frame,message.frameSize);
                         translate_serial(message.frame[0]);
                     }else if (message.serNum == SER_NUM_BGF){
-                        printf("ACQ:\n");
-                        print_trame(message.frame,message.frameSize);
+                        /*printf("ACQ:\n");
+                        print_trame(message.frame,message.frameSize);*/
                         switch (message.frame[0])
                         {
                         case 1:
-                            printf("RECIVED ACQ BGF: ID=1, VAL=%d\n", message.frame[1]);
                             set_acq_position_lights(message.frame[1]);
                             break;
                         case 2:
@@ -138,6 +169,8 @@ void receive_udp_frame(int32_t fd_trame){
                 }else if (acq_blk_left != 2){
                     set_acq_left_blinkers(acq_blk_left);
                 }
+            }else if (trame[14]!=crc_8(trame,14)){
+                printf("UDP TRAME NOT TRANSLATED BECAUSE CRC8\n");
             }
             return;
         }
@@ -156,7 +189,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=POSITION_LIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     if (previous_state_low_beams != state_low_beams){
@@ -170,7 +203,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=LOW_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     if (previous_state_high_beams != state_high_beams){
@@ -184,7 +217,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=HIGH_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     if (previous_state_hazard_lights != state_hazard_lights){
@@ -204,7 +237,7 @@ void send_trame(int32_t fd_trame){
             serialData[1].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[1].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 2);
     }
     if (previous_state_right_blinkers != state_right_blinkers){
@@ -218,7 +251,7 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
     if (previous_state_left_blinkers != state_left_blinkers){
@@ -232,10 +265,9 @@ void send_trame(int32_t fd_trame){
             serialData[0].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
+        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         int32_t res_ser = drv_write_ser(fd_trame, serialData, 1);
     }
-    
     
     uint8_t udpFrame[10]={0};
     if (get_acq_position_lights()==1 && get_cmd_position_lights()==1){
@@ -247,6 +279,56 @@ void send_trame(int32_t fd_trame){
     if (get_acq_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
     }
+    if (get_tank_level() <= 2){
+        udpFrame[0]+=16;
+    }
+    if (get_engine_problems() != NO_ENGINE_PROBLEM){
+        udpFrame[0]+=8;
+    }
+    if (get_chassis_problems() == PRESSURE_DEFAULT){
+        udpFrame[0]+=4;
+    }
+    if (get_battery_problems() == DISCHARGED){
+        udpFrame[0]+=1;
+    }
+
+    if (state_hazard_lights != ST_BLINKERS_ETEINTS && state_hazard_lights != ST_BLINKERS_ERREUR){
+        udpFrame[1]+=128;
+    }
+    if (get_battery_problems() == FAILURE){
+        udpFrame[1]+=64;
+    }
+    if (get_engine_problems() == COOLANT_TEMPERATURE){
+        udpFrame[1]+=32;
+    }
+    if (get_engine_problems() == PRESSURE_DEFAULT){
+        udpFrame[1]+=16;
+    }
+    if (get_engine_problems() == OIL_OVERHEATING){
+        udpFrame[1]+=8;
+    }
+    if (get_chassis_problems() == BRAKE_FAILURE){
+        udpFrame[1]+=4;
+    }
+    if (state_wipers == ST_WIPERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+        udpFrame[1] += 2;
+    }
+    if (state_wipers == ST_WIPERS_WASHERS_ACTIVE || state_wipers == ST_WIPERS_WASHERS_TIMER_ETEINTS) {
+        udpFrame[1] += 1;
+    }
+
+    udpFrame[2]   = (get_mileage() >> 24) & 0xFF;
+    udpFrame[3] = (get_mileage()  >> 16) & 0xFF;
+    udpFrame[4] = (get_mileage()  >> 8)  & 0xFF;
+    udpFrame[5] = get_mileage() & 0xFF;
+
+    udpFrame[6] = get_speed();
+    udpFrame[7] = (get_tank_level()*100)/40;
+
+    udpFrame[8] = (get_revolutions_minute()  >> 8)  & 0xFF;
+    udpFrame[9] = get_revolutions_minute() & 0xFF;
+
+    //print_trame(udpFrame, 10);
 
     int32_t res_udp = drv_write_udp_200ms(fd_trame, udpFrame);
 }
@@ -260,10 +342,11 @@ int main(){
 
     /*printf("state_position : %d\n", state_position);
     printf("state_low_beams : %d\n", state_low_beams);
-    printf("state_high_beams : %d\n", state_high_beams);*/
+    printf("state_high_beams : %d\n", state_high_beams);
     printf("state_hazard_lights : %d\n", state_hazard_lights);
     printf("state_left_blinkers : %d\n", state_left_blinkers);
     printf("state_right_blinkers : %d\n", state_right_blinkers);
+    printf("state_wipers : %d\n", state_wipers);*/
 
     while (1){
         
@@ -295,15 +378,18 @@ int main(){
         previous_state_right_blinkers = state_right_blinkers;
         fsm_blinkers_event_t ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
         fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
+        
+        previous_state_wipers = state_wipers;
+        fsm_wipers_event_t ev_wipers = get_wipers_next_event(state_wipers); 
+        fsm_wipers_update(&state_wipers, ev_wipers);
 
         /*printf("state_position : %d\n", state_position);
         printf("state_low_beams : %d\n", state_low_beams);
-        printf("state_high_beams : %d\n", state_high_beams);*/
+        printf("state_high_beams : %d\n", state_high_beams);
         printf("state_hazard_lights : %d\n", state_hazard_lights);
         printf("state_left_blinkers : %d\n", state_left_blinkers);
         printf("state_right_blinkers : %d\n", state_right_blinkers);
-
-        //printf("cmd_position : %d\n", get_cmd_position_lights());
+        printf("state_wipers : %d\n", state_wipers);*/
 
         send_trame(fd_trame);
     }
