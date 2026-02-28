@@ -1,5 +1,5 @@
-#ifndef FSM_CLIGNOTANTS_H_
-#define FSM_CLIGNOTANTS_H_
+#ifndef FSM_BLINKERS_H_
+#define FSM_BLINKERS_H_
 
 #include "bcgv_lib.h"
 
@@ -7,13 +7,13 @@
 typedef enum {
     ST_BLINKERS_ANY = -1,                            /* Any state */
     ST_BLINKERS_INIT = 0,                            /* Init state */
-    ST_BLINKERS_ETEINTS = 1,
-    ST_BLINKERS_ACTIVES_ALLUMES = 2,
-    ST_BLINKERS_ACTIVES_ETEINTS = 3,
-    ST_BLINKERS_ACQUITTES_VOYANT_ALLUME = 4,
-    ST_BLINKERS_ACQUITTES_VOYANT_ETEINT = 5,
-    ST_BLINKERS_ERREUR = 6,
-    ST_BLINKERS_TERM = 255                           /* Final state */
+    ST_BLINKERS_OFF = 1,
+    ST_BLINKERS_ACTIVATED_ON = 2,
+    ST_BLINKERS_ACTIVATED_OFF = 3,
+    ST_BLINKERS_ACK_ON = 4,
+    ST_BLINKERS_ACK_OFF = 5,
+    ST_BLINKERS_ERROR = 6,
+    ST_BLINKERS_ENDED = 255                           /* Final state */
 } fsm_blinkers_state_t;
 
 /* Events */
@@ -22,8 +22,8 @@ typedef enum {
     EV_BLINKERS_NONE = 0,                            /* No event */
     EV_BLINKERS_CMD0 = 1,
     EV_BLINKERS_CMD1 = 2,
-    EV_BLINKERS_ACQ_RECU = 3,
-    EV_BLINKERS_ACQ_NON_RECU = 4,
+    EV_BLINKERS_ACK_REC = 3,
+    EV_BLINKERS_ACK_NOT_REC = 4,
     EV_BLINKERS_1SEC = 5,
     EV_BLINKERS_ERR = 255                            /* Error event */
 } fsm_blinkers_event_t;

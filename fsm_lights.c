@@ -10,63 +10,63 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "fsm_feux.h"
+#include "fsm_lights.h"
 
 /* Callback functions called on transitions */
 
 static int FsmError(void) { };
 
 /* Transition table */
-tTransition trans[] = {
+tTransition transLights[] = {
     /* These are examples */
-    { ST_INIT, EV_ANY, NULL, ST_ETEINTS},
-    { ST_ETEINTS, EV_CMD1, NULL, ST_ALLUMES},
-    { ST_ETEINTS, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ALLUMES, EV_CMD0, NULL, ST_ETEINTS},
-    { ST_ALLUMES, EV_CMD1, NULL, ST_ALLUMES},
-    { ST_ALLUMES, EV_ACQ_RECU, NULL, ST_ACQUITTES},
-    { ST_ALLUMES, EV_ACQ_NON_RECU, &FsmError, ST_ERREUR},
-    {ST_ACQUITTES, EV_CMD0, NULL, ST_ETEINTS}
+    { ST_LIGHTS_INIT, EV_LIGHTS_ANY, NULL, ST_LIGHTS_OFF},
+    { ST_LIGHTS_OFF, EV_LIGHTS_CMD1, NULL, ST_LIGHTS_ON},
+    { ST_LIGHTS_OFF, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF},
+    { ST_LIGHTS_ON, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF},
+    { ST_LIGHTS_ON, EV_LIGHTS_CMD1, NULL, ST_LIGHTS_ON},
+    { ST_LIGHTS_ON, EV_LIGHTS_ACK_REC, NULL, ST_LIGHTS_ACK},
+    { ST_LIGHTS_ON, EV_LIGHTS_ACK_NOT_REC, &FsmError, ST_LIGHTS_ERROR},
+    { ST_LIGHTS_ACK, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF}
 };
 
-#define TRANS_COUNT (sizeof(trans)/sizeof(*trans))
+#define TRANS_LIGHTS_COUNT (sizeof(transLights)/sizeof(*transLights))
 
-fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t which_light) {
+fsm_lights_event_t get_lights_next_event(fsm_lights_state_t current_state, light_type_t which_light) {
     cmd_t cmd;
-    acq_t acq;
+    ack_t ACK;
     timer_bcgv_t timer;
     
     // We search for the right data depending on the headlight asked
     if (which_light == POSITION_LIGHTS) {
         cmd = get_cmd_position_lights(); 
-        acq = get_acq_position_lights();
+        ACK = get_ack_position_lights();
         timer = get_timer_position_lights();
     } else if (which_light == LOW_BEAMS_HEADLIGHTS) {
         cmd = get_cmd_low_beams_headlights();
-        acq = get_acq_low_beams_headlights();
+        ACK = get_ack_low_beams_headlights();
         timer = get_timer_low_beams_headlights();
     } else {
         cmd = get_cmd_high_beams_headlights();
-        acq = get_acq_high_beams_headlights();
+        ACK = get_ack_high_beams_headlights();
         timer = get_timer_high_beams_headlights();
     }
 
     // 2. Desision logic based on state
     switch (current_state) {
-        case ST_ETEINTS:
+        case ST_LIGHTS_OFF:
             if (which_light == POSITION_LIGHTS){
-                set_acq_position_lights(0);
+                set_ack_position_lights(0);
             }else if (which_light == LOW_BEAMS_HEADLIGHTS){
-                set_acq_low_beams_headlights(0);
+                set_ack_low_beams_headlights(0);
             }else{
-                set_acq_high_beams_headlights(0);
+                set_ack_high_beams_headlights(0);
             }
-            if (cmd == 1) return EV_CMD1; 
-            if (cmd == 0) return EV_CMD0;
+            if (cmd == 1) return EV_LIGHTS_CMD1; 
+            if (cmd == 0) return EV_LIGHTS_CMD0;
             break;
 
-        case ST_ALLUMES:
-        if (acq == 1) {
+        case ST_LIGHTS_ON:
+        if (ACK == 1) {
                 if (which_light == POSITION_LIGHTS){
                     set_timer_position_lights(0); // Reset the timer because recieved
                 }else if (which_light == LOW_BEAMS_HEADLIGHTS){
@@ -74,7 +74,7 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
                 }else{
                     set_timer_high_beams_headlights(0);
                 }
-                return EV_ACQ_RECU;
+                return EV_LIGHTS_ACK_REC;
             }
             
             // Timeout managment (1s = 10 * 100ms)
@@ -86,7 +86,7 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
                 }else{
                     set_timer_high_beams_headlights(0);
                 }
-                return EV_ACQ_NON_RECU;
+                return EV_LIGHTS_ACK_NOT_REC;
             } else {
                 if (which_light == POSITION_LIGHTS){
                     set_timer_position_lights(timer + 1); // Reset the timer because recieved
@@ -96,16 +96,16 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
                     set_timer_high_beams_headlights(timer + 1);
                 }
             }
-            if (cmd == 1) return EV_CMD1;
-            if (cmd == 0) return EV_CMD0;
+            if (cmd == 1) return EV_LIGHTS_CMD1;
+            if (cmd == 0) return EV_LIGHTS_CMD0;
             break;
 
-        case ST_ACQUITTES:
-            if (cmd == 0) return EV_CMD0;
-            if (cmd == 1) return EV_CMD1;
+        case ST_LIGHTS_ACK:
+            if (cmd == 0) return EV_LIGHTS_CMD0;
+            if (cmd == 1) return EV_LIGHTS_CMD1;
             break;
 
-        case ST_ERREUR:
+        case ST_LIGHTS_ERROR:
             
             break;
 
@@ -113,21 +113,21 @@ fsm_feux_event_t get_next_event(fsm_feux_state_t current_state, light_type_t whi
             break;
     }
 
-    return EV_NONE;
+    return EV_LIGHTS_NONE;
 }
 
 // This function makes ONE machine state move forward by one step
-void fsm_update(fsm_feux_state_t *current_state, fsm_feux_event_t event) {
-    for (int i = 0; i < TRANS_COUNT; i++) {
+void fsm_lights_update(fsm_lights_state_t *current_state, fsm_lights_event_t event) {
+    for (int i = 0; i < TRANS_LIGHTS_COUNT; i++) {
         // If state is matches AND the event matches
-        if ((*current_state == trans[i].state || trans[i].state == ST_ANY) && 
-            (event == trans[i].event)) {
+        if ((*current_state == transLights[i].state || transLights[i].state == ST_LIGHTS_ANY) && 
+            (event == transLights[i].event)) {
             
-            *current_state = trans[i].next_state;
+            *current_state = transLights[i].next_state;
             
             // Execute the associated action (callback) if it exist
-            if (trans[i].callback != NULL) {
-                trans[i].callback();
+            if (transLights[i].callback != NULL) {
+                transLights[i].callback();
             }
             break; // Transition found, we quit the for loop
         }
