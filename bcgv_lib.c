@@ -21,7 +21,7 @@ static timer_bcgv_t timer_right_blinkers = 0;
 static timer_bcgv_t timer_left_blinkers = 0;
 static timer_bcgv_t timer_hazard_lights = 0;
 static timer_bcgv_t timer_wipers = 0;
-static thread_number_t thread_number = 0;
+static frame_number_t frame_number = 0;
 static mileage_t mileage = 0;
 static speed_t speed = 0;
 static chassis_problems_type_t chassis_problems = NO_CHASSIS_PROBLEM;
@@ -228,13 +228,13 @@ void set_timer_wipers(timer_bcgv_t new_value){
   timer_wipers = new_value;
 }
 
-thread_number_t get_thread_number(){
-  return thread_number;
+frame_number_t get_frame_number(){
+  return frame_number;
 }
 
-void set_thread_number(thread_number_t new_value){
+void set_frame_number(frame_number_t new_value){
   if (new_value >= 1 && new_value <= 100){
-      thread_number = new_value;
+      frame_number = new_value;
   }
 }
 
