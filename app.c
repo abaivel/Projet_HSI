@@ -126,11 +126,11 @@ void receive_udp_frame(int32_t fd_frame){
         uint8_t crc8 = crc_8(frame,14);
         if (res_udp == DRV_SUCCESS && frame[14]==crc8){
             uint8_t current_frame_num = frame[0];
-            if (current_frame_num != (uint8_t)(previous_frame_num + 1)) {
+            if (current_frame_num != (uint8_t)((get_thread_number() + 1)%100)) {
                 printf("Error: Frame sequence mismatch! Expected %d, Got %d\n", 
-                       (uint8_t)(previous_frame_num + 1), current_frame_num);
+                       (uint8_t)((get_thread_number() + 1)%100), current_frame_num);
             }
-            previous_frame_num = current_frame_num;
+            set_thread_number(current_frame_num);
             translate_udp_frame(frame);
             int32_t res = drv_read_ser(fd_frame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
