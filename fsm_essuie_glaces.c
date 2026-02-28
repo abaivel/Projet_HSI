@@ -19,7 +19,7 @@ static int FsmError(void) {};
 tWipersTransition transWipers[] = {
     /* These are examples */
     { ST_WIPERS_WASHERS_INIT, EV_WIPERS_WASHERS_ANY, NULL, ST_WIPERS_WASHERS_TOUT_ETEINTS},
-    { ST_WIPERS_WASHERS_TOUT_ETEINTS, EV_WIPERS_WASHERS_CMD_EG1, NULL, ST_WIPERS_WASHERS_ACTIVE},
+    { ST_WIPERS_WASHERS_TOUT_ETEINTS, EV_WIPERS_WASHERS_CMD_EG1, NULL, ST_WIPERS_ACTIVE},
     { ST_WIPERS_WASHERS_TOUT_ETEINTS, EV_WIPERS_WASHERS_CMD_LG1, NULL, ST_WIPERS_WASHERS_ACTIVE},
     { ST_WIPERS_WASHERS_TOUT_ETEINTS, EV_WIPERS_WASHERS_CMD_EG0_CMD_LG0, NULL, ST_WIPERS_WASHERS_TOUT_ETEINTS},
     { ST_WIPERS_ACTIVE, EV_WIPERS_WASHERS_CMD_EG1, NULL, ST_WIPERS_ACTIVE},
@@ -76,7 +76,7 @@ fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state)
                 return EV_WIPERS_WASHERS_MORE_2SEC;
             }else {
                 set_timer_wipers(timer + 1);
-                printf("\ntimer: %d\n",timer);
+                //printf("\ntimer: %d\n",timer);
                 return EV_WIPERS_WASHERS_LESS_2SEC;
             }
             if (cmd_ww == 1){ return EV_WIPERS_WASHERS_CMD_LG1; }
