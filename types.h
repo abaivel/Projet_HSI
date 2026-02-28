@@ -42,6 +42,6 @@ typedef enum {
 
 typedef struct {
     uint8_t cmd;
-    uint8_t acq;
+    uint8_t ack;
     uint32_t timer;
 } t_vehicule_data;

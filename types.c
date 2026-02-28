@@ -8,8 +8,8 @@ uint8_t get_cmd_position_headlights(){
     return position_headlights.cmd;
 }
 
-uint8_t get_acq_position_headlights(){
-    return position_headlights.acq;
+uint8_t get_ack_position_headlights(){
+    return position_headlights.ack;
 }
 
 uint32_t get_timer_position_headlights(){
@@ -20,8 +20,8 @@ uint8_t get_cmd_low_beams_headlights(){
     return low_beams_headlights.cmd;
 }
 
-uint8_t get_acq_low_beams_headlights(){
-    return low_beams_headlights.acq;
+uint8_t get_ack_low_beams_headlights(){
+    return low_beams_headlights.ack;
 }
 
 uint32_t get_timer_low_beams_headlights(){
@@ -32,8 +32,8 @@ uint8_t get_cmd_high_beams_headlights(){
     return high_beams_headlights.cmd;
 }
 
-uint8_t get_acq_high_beams_headlights(){
-    return high_beams_headlights.acq;
+uint8_t get_ack_high_beams_headlights(){
+    return high_beams_headlights.ack;
 }
 
 uint32_t get_timer_high_beams_headlights(){
@@ -44,8 +44,8 @@ void set_cmd_position_headlights(uint8_t cmd){
     position_headlights.cmd = cmd;
 }
 
-void set_acq_position_headlights(uint8_t acq){
-    position_headlights.acq = acq;
+void set_ack_position_headlights(uint8_t ack){
+    position_headlights.ack = ack;
 }
 
 void set_timer_position_headlights(uint32_t timer){
@@ -56,8 +56,8 @@ void set_cmd_low_beams_headlightsuint8_t(uint8_t cmd){
     low_beams_headlights.cmd = cmd;
 }
 
-void set_acq_low_beams_headlightsuint8_t(uint8_t acq){
-    low_beams_headlights.acq = acq;
+void set_ack_low_beams_headlightsuint8_t(uint8_t ack){
+    low_beams_headlights.ack = ack;
 }
 
 void set_timer_low_beams_headlightsuint32_t(uint8_t timer){
@@ -68,8 +68,8 @@ void set_cmd_high_beams_headlights(uint8_t cmd){
     high_beams_headlights.cmd = cmd;
 }
 
-void set_acq_high_beams_headlights(uint8_t acq){
-    high_beams_headlights.acq = acq;
+void set_ack_high_beams_headlights(uint8_t ack){
+    high_beams_headlights.ack = ack;
 }
 
 void set_timer_high_beams_headlights(uint32_t timer){
