@@ -22,8 +22,6 @@ static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_OFF;
 static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_OFF;
 static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_ALL_OFF;
 
-static int index = 0;
-
 void print_frame(uint8_t frame[], int size_frame){
     for (int i = 0;i<size_frame;i++){
         printf("%hhu ",frame[i]);
@@ -116,27 +114,37 @@ void translate_udp_frame(uint8_t frame[]){
 }
 
 void receive_udp_frame(int32_t fd_frame){
-    static uint8_t previous_frame_num = 0; 
-    
+    uint8_t expected_frame_num, current_frame_num;
+    uint8_t frame[15];
+    serial_frame_t messages[16];
+    uint32_t serialDataLen = 16;
+    int32_t res_udp;
+    uint8_t crc8;
+    int32_t res;
+    int ack_blk_right, ack_blk_left;
+    uint8_t i;
+    serial_frame_t message;
     while (1){
-        uint8_t frame[15];
-        serial_frame_t messages[16];
-        uint32_t serialDataLen = 16;
-        int32_t res_udp = drv_read_udp_100ms(fd_frame, frame);
-        uint8_t crc8 = crc_8(frame,14);
+        res_udp = drv_read_udp_100ms(fd_frame, frame);
+        crc8 = crc_8(frame,14);
         if (res_udp == DRV_SUCCESS && frame[14]==crc8){
-            uint8_t current_frame_num = frame[0];
-            if (current_frame_num != (uint8_t)((get_frame_number() + 1)%100)) {
+            current_frame_num = frame[0];
+            expected_frame_num = get_frame_number() + 1;
+            if (expected_frame_num == 101){
+                expected_frame_num = 1;
+            }
+            if (current_frame_num != expected_frame_num) {
                 printf("Error: Frame sequence mismatch! Expected %d, Got %d\n", 
-                       (uint8_t)((get_frame_number() + 1)%100), current_frame_num);
+                       expected_frame_num, current_frame_num);
             }
             set_frame_number(current_frame_num);
             translate_udp_frame(frame);
-            int32_t res = drv_read_ser(fd_frame, messages, &serialDataLen);
+            res = drv_read_ser(fd_frame, messages, &serialDataLen);
             if (res == DRV_SUCCESS && serialDataLen > 0){
-                int ack_blk_right =2, ack_blk_left=2;
-                for (int i = 0; i<serialDataLen;i++){
-                    serial_frame_t message = messages[i];
+                ack_blk_right =2;
+                ack_blk_left=2;
+                for (i = 0; i<serialDataLen;i++){
+                    message = messages[i];
                     if (message.serNum == SER_NUM_COMODO){
                          translate_serial(message.frame[0]);
                     }else if (message.serNum == SER_NUM_BGF){
@@ -178,8 +186,11 @@ void receive_udp_frame(int32_t fd_frame){
 }
 
 void send_frame(int32_t fd_frame){
+    serial_frame_t serialData[2];
+    int32_t res_ser;
+    uint8_t udpFrame[10]={0};
+    int32_t res_udp;
     if (previous_state_position != state_position){
-        serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         if (state_position == ST_LIGHTS_OFF || state_position == ST_LIGHTS_ERROR){
@@ -190,10 +201,12 @@ void send_frame(int32_t fd_frame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
+        res_ser = drv_write_ser(fd_frame, serialData, 1);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
     if (previous_state_low_beams != state_low_beams){
-        serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         if (state_low_beams == ST_LIGHTS_OFF || state_low_beams == ST_LIGHTS_ERROR){
@@ -204,10 +217,12 @@ void send_frame(int32_t fd_frame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
+        res_ser = drv_write_ser(fd_frame, serialData, 1);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
     if (previous_state_high_beams != state_high_beams){
-        serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         if (state_high_beams == ST_LIGHTS_OFF || state_high_beams == ST_LIGHTS_ERROR){
@@ -218,10 +233,12 @@ void send_frame(int32_t fd_frame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
+        res_ser = drv_write_ser(fd_frame, serialData, 1);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
     if (previous_state_hazard_lights != state_hazard_lights){
-        serial_frame_t serialData[2];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         serialData[1].serNum = SER_NUM_BGF;
@@ -238,10 +255,12 @@ void send_frame(int32_t fd_frame){
             serialData[1].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 2);
+        res_ser = drv_write_ser(fd_frame, serialData, 2);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
     if (previous_state_right_blinkers != state_right_blinkers){
-        serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         if (state_right_blinkers == ST_BLINKERS_OFF || state_right_blinkers == ST_BLINKERS_ACTIVATED_OFF || state_right_blinkers == ST_BLINKERS_ACK_OFF || state_right_blinkers == ST_BLINKERS_ERROR){
@@ -252,10 +271,12 @@ void send_frame(int32_t fd_frame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
+        res_ser = drv_write_ser(fd_frame, serialData, 1);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
     if (previous_state_left_blinkers != state_left_blinkers){
-        serial_frame_t serialData[1];
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
         if (state_left_blinkers == ST_BLINKERS_OFF || state_left_blinkers == ST_BLINKERS_ACTIVATED_OFF || state_left_blinkers == ST_BLINKERS_ACK_OFF || state_left_blinkers == ST_BLINKERS_ERROR){
@@ -266,10 +287,12 @@ void send_frame(int32_t fd_frame){
             serialData[0].frame[1]=1;
         }
         //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
-        int32_t res_ser = drv_write_ser(fd_frame, serialData, 1);
+        res_ser = drv_write_ser(fd_frame, serialData, 1);
+        if (res_ser == DRV_ERROR){
+            printf("Error: There has been a error while writing data on serial lines");
+        }
     }
-    
-    uint8_t udpFrame[10]={0};
+
     if (get_ack_position_lights()==1 && get_cmd_position_lights()==1){
         udpFrame[0]+=128;
     }
@@ -285,7 +308,7 @@ void send_frame(int32_t fd_frame){
     if (get_engine_problems() != NO_ENGINE_PROBLEM){
         udpFrame[0]+=8;
     }
-    if (get_chassis_problems() == PRESSURE_DEFAULT){
+    if (get_chassis_problems() == TIRE_PRESSURE){
         udpFrame[0]+=4;
     }
     if (get_battery_problems() == DISCHARGED){
@@ -330,7 +353,10 @@ void send_frame(int32_t fd_frame){
 
     //print_frame(udpFrame, 10);
 
-    int32_t res_udp = drv_write_udp_200ms(fd_frame, udpFrame);
+    res_udp = drv_write_udp_200ms(fd_frame, udpFrame);
+    if (res_udp == DRV_ERROR){
+        printf("Error: There has been a error while writing UDP 200ms frame");
+    }
 }
 
 void init_comm(){
@@ -338,6 +364,13 @@ void init_comm(){
 }
 
 int main(){
+    fsm_lights_event_t ev_pos;
+    fsm_lights_event_t ev_low_beams;
+    fsm_lights_event_t ev_high_beams;
+    fsm_blinkers_event_t ev_haz;
+    fsm_blinkers_event_t ev_left_blink;
+    fsm_blinkers_event_t ev_right_blink;
+    fsm_wipers_event_t ev_wipers;
     int32_t fd_frame = drv_open();
 
     /*printf("state_position : %d\n", state_position);
@@ -353,34 +386,34 @@ int main(){
         receive_udp_frame(fd_frame);
 
         previous_state_position = state_position;
-        fsm_lights_event_t ev_pos = get_lights_next_event(state_position, POSITION_LIGHTS);
+        ev_pos = get_lights_next_event(state_position, POSITION_LIGHTS);
         //printf("ev_pos : %d\n", ev_pos);
         fsm_lights_update(&state_position, ev_pos);
 
         // managment of low beams headlights
         previous_state_low_beams = state_low_beams;
-        fsm_lights_event_t ev_crois = get_lights_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
-        fsm_lights_update(&state_low_beams, ev_crois);
+        ev_low_beams = get_lights_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
+        fsm_lights_update(&state_low_beams, ev_low_beams);
 
         // Managment of high beams headlights
         previous_state_high_beams = state_high_beams;
-        fsm_lights_event_t ev_route = get_lights_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
-        fsm_lights_update(&state_high_beams, ev_route);
+        ev_high_beams = get_lights_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
+        fsm_lights_update(&state_high_beams, ev_high_beams);
 
         previous_state_hazard_lights = state_hazard_lights;
-        fsm_blinkers_event_t ev_haz = get_blinkers_next_event(state_hazard_lights, HAZARD_LIGHTS);
+        ev_haz = get_blinkers_next_event(state_hazard_lights, HAZARD_LIGHTS);
         fsm_blinkers_update(&state_hazard_lights, ev_haz);
 
         previous_state_left_blinkers = state_left_blinkers;
-        fsm_blinkers_event_t ev_left_blink = get_blinkers_next_event(state_left_blinkers, LEFT_BLINKERS);
+        ev_left_blink = get_blinkers_next_event(state_left_blinkers, LEFT_BLINKERS);
         fsm_blinkers_update(&state_left_blinkers, ev_left_blink);
 
         previous_state_right_blinkers = state_right_blinkers;
-        fsm_blinkers_event_t ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
+        ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
         fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
         
         previous_state_wipers = state_wipers;
-        fsm_wipers_event_t ev_wipers = get_wipers_next_event(state_wipers); 
+        ev_wipers = get_wipers_next_event(state_wipers); 
         fsm_wipers_update(&state_wipers, ev_wipers);
 
         /*printf("state_position : %d\n", state_position);

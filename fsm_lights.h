@@ -21,10 +21,6 @@ typedef enum {
     EV_LIGHTS_ERR = 255                            /* Error event */
 } fsm_lights_event_t;
 
-/* Callback functions called on transitions */
-
-static int FsmError(void);
-
 /* Transition structure */
 typedef struct {
     fsm_lights_state_t state;
