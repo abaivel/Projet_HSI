@@ -25,8 +25,6 @@ typedef enum {
     EV_WIPERS_WASHERS_ERR = 255                            /* Error event */
 } fsm_wipers_event_t;
 
-/* Callback functions called on transitions */
-static int FsmError(void);
 
 /* Transition structure */
 typedef struct {

@@ -12,10 +12,6 @@
 #include <stdint.h>
 #include "fsm_lights.h"
 
-/* Callback functions called on transitions */
-
-static int FsmError(void) { };
-
 /* Transition table */
 tTransition transLights[] = {
     /* These are examples */
@@ -25,7 +21,7 @@ tTransition transLights[] = {
     { ST_LIGHTS_ON, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF},
     { ST_LIGHTS_ON, EV_LIGHTS_CMD1, NULL, ST_LIGHTS_ON},
     { ST_LIGHTS_ON, EV_LIGHTS_ACK_REC, NULL, ST_LIGHTS_ACK},
-    { ST_LIGHTS_ON, EV_LIGHTS_ACK_NOT_REC, &FsmError, ST_LIGHTS_ERROR},
+    { ST_LIGHTS_ON, EV_LIGHTS_ACK_NOT_REC, NULL, ST_LIGHTS_ERROR},
     { ST_LIGHTS_ACK, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF}
 };
 
@@ -118,7 +114,7 @@ fsm_lights_event_t get_lights_next_event(fsm_lights_state_t current_state, light
 
 // This function makes ONE machine state move forward by one step
 void fsm_lights_update(fsm_lights_state_t *current_state, fsm_lights_event_t event) {
-    for (int i = 0; i < TRANS_LIGHTS_COUNT; i++) {
+    for (int i = 0; i < (int)TRANS_LIGHTS_COUNT; i++) {
         // If state is matches AND the event matches
         if ((*current_state == transLights[i].state || transLights[i].state == ST_LIGHTS_ANY) && 
             (event == transLights[i].event)) {

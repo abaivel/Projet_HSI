@@ -12,9 +12,6 @@
 #include <stdint.h>
 #include "fsm_wipers.h"
 
-/* Callback functions called on transitions */
-static int FsmError(void) {};
-
 /* Transition table */
 tWipersTransition transWipers[] = {
     /* These are examples */
@@ -84,11 +81,12 @@ fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state)
         default:
             break;
     }
+    return EV_WIPERS_WASHERS_NONE;
 }
 
 // This function makes ONE machine state move forward by one step
 void fsm_wipers_update(fsm_wipers_state_t *current_state, fsm_wipers_event_t event) {
-    for (int i = 0; i < TRANS_WIPERS_COUNT; i++) {
+    for (int i = 0; i < (int)TRANS_WIPERS_COUNT; i++) {
         // If state is matches AND the event matches
         if ((*current_state == transWipers[i].state || transWipers[i].state == ST_WIPERS_WASHERS_ANY) && 
             (event == transWipers[i].event)) {

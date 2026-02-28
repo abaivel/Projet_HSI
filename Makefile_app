@@ -1,7 +1,7 @@
 all: app
 
 app: app.c fsm_lights.c
-	gcc app.c fsm_lights.c fsm_wipers.c fsm_blinkers.c crc8.c bcgv_lib.a drv_api.a -o app
+	gcc app.c fsm_lights.c fsm_wipers.c fsm_blinkers.c crc8.c bcgv_lib.a drv_api.a -W -Wall -pedantic -o app
 
 clean:
 	rm -f app *.o

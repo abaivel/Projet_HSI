@@ -28,8 +28,6 @@ typedef enum {
     EV_BLINKERS_ERR = 255                            /* Error event */
 } fsm_blinkers_event_t;
 
-static int FsmError(void);
-
 /* Transition structure */
 typedef struct {
     fsm_blinkers_state_t state;

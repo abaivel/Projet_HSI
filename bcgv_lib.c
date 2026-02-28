@@ -37,7 +37,7 @@ cmd_t get_cmd_hazard_lights(){
 }
 
 void set_cmd_hazard_lights(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_hazard_lights = new_value;
   }
 }
@@ -47,7 +47,7 @@ cmd_t get_cmd_position_lights(){
 }
 
 void set_cmd_position_lights(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_position_lights = new_value;
   }
 }
@@ -57,7 +57,7 @@ cmd_t get_cmd_low_beams_headlights(){
 }
 
 void set_cmd_low_beams_headlights(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_low_beams_headlights = new_value;
   }
 }
@@ -67,7 +67,7 @@ cmd_t get_cmd_high_beams_headlights(){
 }
 
 void set_cmd_high_beams_headlights(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_high_beams_headlights = new_value;
   }
 }
@@ -77,7 +77,7 @@ cmd_t get_cmd_right_blinkers(){
 }
 
 void set_cmd_right_blinkers(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_right_blinkers = new_value;
   }
 }
@@ -87,7 +87,7 @@ cmd_t get_cmd_left_blinkers(){
 }
 
 void set_cmd_left_blinkers(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_left_blinkers = new_value;
   }
 }
@@ -97,7 +97,7 @@ cmd_t get_cmd_wipers(){
 }
 
 void set_cmd_wipers(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_wipers = new_value;
   }
 }
@@ -107,7 +107,7 @@ cmd_t get_cmd_windshield_washer(){
 }
 
 void set_cmd_windshield_washer(cmd_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       cmd_windshield_washer = new_value;
   }
 }
@@ -117,7 +117,7 @@ ack_t get_ack_position_lights(){
 }
 
 void set_ack_position_lights(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_position_lights = new_value;
   }
 }
@@ -127,7 +127,7 @@ ack_t get_ack_low_beams_headlights(){
 }
 
 void set_ack_low_beams_headlights(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_low_beams_headlights = new_value;
   }
 }
@@ -137,7 +137,7 @@ ack_t get_ack_high_beams_headlights(){
 }
 
 void set_ack_high_beams_headlights(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_high_beams_headlights = new_value;
   }
 }
@@ -147,7 +147,7 @@ ack_t get_ack_right_blinkers(){
 }
 
 void set_ack_right_blinkers(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_right_blinkers = new_value;
   }
 }
@@ -157,7 +157,7 @@ ack_t get_ack_left_blinkers(){
 }
 
 void set_ack_left_blinkers(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_left_blinkers = new_value;
   }
 }
@@ -167,7 +167,7 @@ ack_t get_ack_hazard_lights(){
 }
 
 void set_ack_hazard_lights(ack_t new_value){
-  if (new_value >= 0 && new_value <= 1){
+  if (new_value <= 1){
       ack_hazard_lights = new_value;
   }
 }
@@ -251,9 +251,7 @@ speed_t get_speed(){
 }
 
 void set_speed(speed_t new_value){
-  if (new_value >= 0 && new_value <= 255){
-      speed = new_value;
-  }
+  speed = new_value;
 }
 
 chassis_problems_type_t get_chassis_problems(){
@@ -277,7 +275,7 @@ tank_level_t get_tank_level(){
 }
 
 void set_tank_level(tank_level_t new_value){
-  if (new_value >= 0 && new_value <= 40){
+  if (new_value <= 40){
       tank_level = new_value;
   }
 }
@@ -287,7 +285,7 @@ revolutions_minute_t get_revolutions_minute(){
 }
 
 void set_revolutions_minute(revolutions_minute_t new_value){
-  if (new_value >= 0 && new_value <= 10000){
+  if (new_value <= 10000){
       revolutions_minute = new_value;
   }
 }
@@ -305,8 +303,6 @@ crc8_t get_crc8(){
 }
 
 void set_crc8(crc8_t new_value){
-  if (new_value >= 0 && new_value <= 255){
-      crc8 = new_value;
-  }
+  crc8 = new_value;
 }
 

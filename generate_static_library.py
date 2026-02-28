@@ -46,9 +46,15 @@ for d in data.values:
     set_f = "void set_"+d[1]+"("+d[2]+" new_value"+"){\n"
 
     if d[2] in dimensions.keys() :
-        set_f += "  if (new_value >= "+dimensions[d[2]][0]+" && new_value <= "+dimensions[d[2]][1]+"){\n"
-        set_f += "      "+d[1]+" = new_value;\n"
-        set_f += "  }\n"
+        min, max = dimensions[d[2]]
+        if min == "0":
+            set_f += "  if (new_value <= "+max+"){\n"
+            set_f += "      "+d[1]+" = new_value;\n"
+            set_f += "  }\n"
+        else:
+            set_f += "  if (new_value >= "+min+" && new_value <= "+max+"){\n"
+            set_f += "      "+d[1]+" = new_value;\n"
+            set_f += "  }\n"
     else: 
         set_f += "  "+d[1]+" = new_value;\n"
     

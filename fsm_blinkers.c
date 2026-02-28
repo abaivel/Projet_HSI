@@ -12,10 +12,6 @@
 #include <stdint.h>
 #include "fsm_blinkers.h"
 
-/* Callback functions called on transitions */
-
-static int FsmError(void) { };
-
 /* Transition table */
 tBlinkersTransition transBlinkers[] = {
     /* These are examples */
@@ -24,24 +20,23 @@ tBlinkersTransition transBlinkers[] = {
     { ST_BLINKERS_OFF, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVATED_ON},
     { ST_BLINKERS_ACTIVATED_ON, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVATED_ON},
     { ST_BLINKERS_ACTIVATED_ON, EV_BLINKERS_ACK_REC, NULL, ST_BLINKERS_ACK_ON},
-    { ST_BLINKERS_ACTIVATED_ON, EV_BLINKERS_ACK_NOT_REC, &FsmError, ST_BLINKERS_ERROR},
+    { ST_BLINKERS_ACTIVATED_ON, EV_BLINKERS_ACK_NOT_REC, NULL, ST_BLINKERS_ERROR},
     { ST_BLINKERS_ACK_ON, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACK_ON},
     { ST_BLINKERS_ACK_ON, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_OFF},
     { ST_BLINKERS_ACK_ON, EV_BLINKERS_1SEC, NULL, ST_BLINKERS_ACTIVATED_OFF},
     { ST_BLINKERS_ACTIVATED_OFF, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVATED_OFF},
     { ST_BLINKERS_ACTIVATED_OFF, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_OFF},
     { ST_BLINKERS_ACTIVATED_OFF, EV_BLINKERS_ACK_REC, NULL, ST_BLINKERS_ACK_OFF},
-    { ST_BLINKERS_ACTIVATED_OFF, EV_BLINKERS_ACK_NOT_REC, &FsmError, ST_BLINKERS_ERROR},
+    { ST_BLINKERS_ACTIVATED_OFF, EV_BLINKERS_ACK_NOT_REC, NULL, ST_BLINKERS_ERROR},
     { ST_BLINKERS_ACK_OFF, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACK_OFF},
     { ST_BLINKERS_ACK_OFF, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_OFF},
     { ST_BLINKERS_ACK_OFF, EV_BLINKERS_1SEC, NULL, ST_BLINKERS_ACTIVATED_ON},
-    { ST_BLINKERS_ANY, EV_BLINKERS_ERR, &FsmError, ST_BLINKERS_ENDED}
+    { ST_BLINKERS_ANY, EV_BLINKERS_ERR, NULL, ST_BLINKERS_ENDED}
 };
 
 #define TRANS_BLINKERS_COUNT (sizeof(transBlinkers)/sizeof(*transBlinkers))
 
 fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker) {
-    int event = EV_BLINKERS_NONE;
     cmd_t cmd;
     ack_t ack;
     timer_bcgv_t timer;
@@ -178,11 +173,12 @@ fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
     default:
         break;
     }
+    return EV_BLINKERS_NONE;
 }
 
 // This function makes ONE machine state move forward by one step
 void fsm_blinkers_update(fsm_blinkers_state_t *current_state, fsm_blinkers_event_t event) {
-    for (int i = 0; i < TRANS_BLINKERS_COUNT; i++) {
+    for (int i = 0; i < (int)TRANS_BLINKERS_COUNT; i++) {
         // If state is matches AND the event matches
         if ((*current_state == transBlinkers[i].state || transBlinkers[i].state == ST_BLINKERS_ANY) && 
             (event == transBlinkers[i].event)) {
