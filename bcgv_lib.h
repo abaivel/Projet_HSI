@@ -1,3 +1,10 @@
+/**
+ * \file        bcgv_lib.h
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This file describe the interface of the file, bcgv_lib.c.
+ * \details     It declares the data types and functions
+ *              needed in the project.
+ */
 #ifndef BCGV_LIB_H_
 #define BCGV_LIB_H_
 
@@ -29,7 +36,7 @@ NO_CHASSIS_PROBLEM = 0, TIRE_PRESSURE = 1, BRAKE_FAILURE = 2
 } chassis_problems_type_t;
 
 typedef enum {
-NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING
+NO_ENGINE_PROBLEM = 0, PRESSURE_DEFAULT = 1, COOLANT_TEMPERATURE = 2, OIL_OVERHEATING = 4
 } engine_problems_type_t;
 
 typedef enum {

@@ -1,9 +1,7 @@
 /**
- * \file        fsm.c
- * \author      Alexis Daley
- * \version     0.4
- * \date        08 otober 2023
- * \brief       This is a template file to create a Finite State Machine.
+ * \file        fsm_blinkers.c
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This is a file to create a Finite State Machine for the blinkers.
  * \details
  */
 

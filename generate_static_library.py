@@ -13,6 +13,9 @@ data = read_excel("data_project.xlsx", "Data")
 c_file = open("bcgv_lib.c", "w")
 h_file = open("bcgv_lib.h", "w")
 
+h_file.write("/**\n * \\file        bcgv_lib.h\n * \\author      Alexandra Baivel and Dawid Malicki\n * \\brief       This file describe the interface of the file, bcgv_lib.c.\n * \\details     It declares the data types and functions\n *              needed in the project.\n */\n")
+c_file.write("/**\n * \\file        bcgv_lib.c\n * \\author      Alexandra Baivel and Dawid Malicki\n * \\brief       This is a file to declare the static variables needed in the project and their getter and setter.\n * \\details\n */\n")
+
 h_file.write("#ifndef BCGV_LIB_H_\n#define BCGV_LIB_H_\n\n#include <stdint.h>\n\n")
 h_file.write("#define SER_NUM_BGF 11\n#define SER_NUM_COMODO 12\n\n")
 

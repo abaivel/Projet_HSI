@@ -1,3 +1,11 @@
+ /**
+ * \file        fsm_wipers.h
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This file describe the interface of the wipers Finite State Machine file, fsm_wipers.c.
+ * \details     It declares the data types, states, and functions
+ *              used to control the wipers finite state machine.
+ */
+
 #include "bcgv_lib.h"
 
 /* States */
@@ -36,6 +44,17 @@ typedef struct {
 
 #define TRANS_WIPERS_COUNT (sizeof(transWipers)/sizeof(*transWipers))
 
+/**
+ * \brief   Get the next event of the wipers state machine
+ * \param       current_state : The state the state machine is currently in
+ * \return  fsm_wipers_event_t : The next event, depending on the wipers data
+ */
 fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state);
 
+/**
+ * \brief   Makes ONE machine state move forward by one step
+ * \param[out]  current_state : The state the state machine is currently in, at the end of the function, it's the next state
+ * \param       event : The next event
+ * \return  void
+ */
 void fsm_wipers_update(fsm_wipers_state_t *current_state, fsm_wipers_event_t event);

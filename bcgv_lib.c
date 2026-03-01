@@ -1,3 +1,9 @@
+/**
+ * \file        bcgv_lib.c
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This is a file to declare the static variables needed in the project and their getter and setter.
+ * \details
+ */
 #include "bcgv_lib.h"
 
 static cmd_t cmd_hazard_lights = 0;
