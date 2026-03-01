@@ -1,3 +1,10 @@
+ /**
+ * \file        fsm_blinkers.h
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This file describe the interface of the blinker Finite State Machine file, fsm_blinkers.c.
+ * \details     It declares the data types, states, and functions
+ *              used to control the blinker finite state machine.
+ */
 #ifndef FSM_BLINKERS_H_
 #define FSM_BLINKERS_H_
 
@@ -38,9 +45,20 @@ typedef struct {
 
 #define TRANS_BLINKERS_COUNT (sizeof(transBlinkers)/sizeof(*transBlinkers))
 
+/**
+ * \brief   Get the next event of the blinkers state machine
+ * \param       current_state : The state the state machine is currently in
+ * \param       which_blinkers : the blinker on which you needs the next event
+ * \return  fsm_blinkers_event_t : The next event, depending on the blinker data
+ */
 fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state, blinkers_type_t which_blinker);
 
-// This function makes ONE machine state move forward by one step
+/**
+ * \brief   Makes ONE machine state move forward by one step
+ * \param[out]  current_state : The state the state machine is currently in, at the end of the function, it's the next state
+ * \param       event : The next event
+ * \return  void
+ */
 void fsm_blinkers_update(fsm_blinkers_state_t *current_state, fsm_blinkers_event_t event);
 
 #endif

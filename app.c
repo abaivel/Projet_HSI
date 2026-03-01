@@ -1,3 +1,11 @@
+/**
+ * \file        app.c
+ * \author      Alexandra Baivel and Dawid Malicki
+ * \brief       This is the main file to start the app
+ * \details
+ */
+
+
 #include <stdint.h>
 #include <stdio.h>
 #include "drv_api.h"
@@ -22,21 +30,12 @@ static fsm_blinkers_state_t previous_state_left_blinkers = ST_BLINKERS_OFF;
 static fsm_blinkers_state_t previous_state_right_blinkers = ST_BLINKERS_OFF;
 static fsm_wipers_state_t previous_state_wipers = ST_WIPERS_WASHERS_ALL_OFF;
 
-void print_frame(uint8_t frame[], int size_frame){
-    for (int i = 0;i<size_frame;i++){
-        printf("%hhu ",frame[i]);
-    }
-    printf("\n");
-}
 
-void print_message(serial_frame_t message[], int size_message){
-    for (int i=0;i<size_message;i++){
-        printf("\nsize: %ld\n", message[i].frameSize);
-        //printf("%d\n", message[i].serNum);
-        print_frame(message[i].frame,2);
-    }
-}
-
+/**
+ * \brief   Decode the serial message and update all the necessary datas
+ * \param       frame : The serial message to decode
+ * \return  void
+ */
 void translate_serial(uint8_t frame){
     if (frame >= 128){
         frame -= 128;
@@ -89,6 +88,11 @@ void translate_serial(uint8_t frame){
 
 }
 
+/**
+ * \brief   Decode the udp frame and update all the necessary datas
+ * \param       frame : The udp frame to decode
+ * \return  void
+ */
 void translate_udp_frame(uint8_t frame[]){
     set_mileage(((uint32_t)frame[1] << 24) |
     ((uint32_t)frame[2] << 16) |
@@ -113,7 +117,13 @@ void translate_udp_frame(uint8_t frame[]){
 
 }
 
-void receive_udp_frame(int32_t fd_frame){
+
+/**
+ * \brief   Receive the udp frame and the serial message from the driver
+ * \param       fd_frame : The file descriptor of the channel with the driver
+ * \return  void
+ */
+void receive_frames(int32_t fd_frame){
     uint8_t expected_frame_num, current_frame_num;
     uint8_t frame[15];
     serial_frame_t messages[16];
@@ -185,7 +195,13 @@ void receive_udp_frame(int32_t fd_frame){
     }
 }
 
-void send_frame(int32_t fd_frame){
+
+/**
+ * \brief   Send the udp frame and the serial message to the driver
+ * \param       fd_frame : The file descriptor of the channel with the driver
+ * \return  void
+ */
+void send_frames(int32_t fd_frame){
     serial_frame_t serialData[2];
     int32_t res_ser;
     uint8_t udpFrame[10]={0};
@@ -348,8 +364,9 @@ void send_frame(int32_t fd_frame){
     udpFrame[6] = get_speed();
     udpFrame[7] = (get_tank_level()*100)/40;
 
-    udpFrame[8] = (get_revolutions_minute()  >> 8)  & 0xFF;
-    udpFrame[9] = get_revolutions_minute() & 0xFF;
+    revolutions_minute_t rev_min = get_revolutions_minute()/10;
+    udpFrame[8] = (rev_min  >> 8)  & 0xFF;
+    udpFrame[9] = rev_min & 0xFF;
 
     //print_frame(udpFrame, 10);
 
@@ -357,10 +374,6 @@ void send_frame(int32_t fd_frame){
     if (res_udp == DRV_ERROR){
         printf("Error: There has been a error while writing UDP 200ms frame");
     }
-}
-
-void init_comm(){
-
 }
 
 int main(){
@@ -373,58 +386,46 @@ int main(){
     fsm_wipers_event_t ev_wipers;
     int32_t fd_frame = drv_open();
 
-    /*printf("state_position : %d\n", state_position);
-    printf("state_low_beams : %d\n", state_low_beams);
-    printf("state_high_beams : %d\n", state_high_beams);
-    printf("state_hazard_lights : %d\n", state_hazard_lights);
-    printf("state_left_blinkers : %d\n", state_left_blinkers);
-    printf("state_right_blinkers : %d\n", state_right_blinkers);
-    printf("state_wipers : %d\n", state_wipers);*/
-
     while (1){
         
-        receive_udp_frame(fd_frame);
+        receive_frames(fd_frame);
 
+        // Management of position lights
         previous_state_position = state_position;
         ev_pos = get_lights_next_event(state_position, POSITION_LIGHTS);
-        //printf("ev_pos : %d\n", ev_pos);
         fsm_lights_update(&state_position, ev_pos);
 
-        // managment of low beams headlights
+        // Management of low beams headlights
         previous_state_low_beams = state_low_beams;
         ev_low_beams = get_lights_next_event(state_low_beams, LOW_BEAMS_HEADLIGHTS);
         fsm_lights_update(&state_low_beams, ev_low_beams);
 
-        // Managment of high beams headlights
+        // Management of high beams headlights
         previous_state_high_beams = state_high_beams;
         ev_high_beams = get_lights_next_event(state_high_beams, HIGH_BEAMS_HEADLIGHTS);
         fsm_lights_update(&state_high_beams, ev_high_beams);
 
+        // Management of hazard lights
         previous_state_hazard_lights = state_hazard_lights;
         ev_haz = get_blinkers_next_event(state_hazard_lights, HAZARD_LIGHTS);
         fsm_blinkers_update(&state_hazard_lights, ev_haz);
 
+        // Management of left blinker
         previous_state_left_blinkers = state_left_blinkers;
         ev_left_blink = get_blinkers_next_event(state_left_blinkers, LEFT_BLINKERS);
         fsm_blinkers_update(&state_left_blinkers, ev_left_blink);
 
+        // Management of right blinker
         previous_state_right_blinkers = state_right_blinkers;
         ev_right_blink = get_blinkers_next_event(state_right_blinkers, RIGHT_BLINKERS);
         fsm_blinkers_update(&state_right_blinkers, ev_right_blink);
         
+        // Management of wipers
         previous_state_wipers = state_wipers;
         ev_wipers = get_wipers_next_event(state_wipers); 
         fsm_wipers_update(&state_wipers, ev_wipers);
 
-        /*printf("state_position : %d\n", state_position);
-        printf("state_low_beams : %d\n", state_low_beams);
-        printf("state_high_beams : %d\n", state_high_beams);
-        printf("state_hazard_lights : %d\n", state_hazard_lights);
-        printf("state_left_blinkers : %d\n", state_left_blinkers);
-        printf("state_right_blinkers : %d\n", state_right_blinkers);
-        printf("state_wipers : %d\n", state_wipers);*/
-
-        send_frame(fd_frame);
+        send_frames(fd_frame);
     }
     drv_close(fd_frame);
 }
