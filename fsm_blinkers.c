@@ -12,7 +12,6 @@
 
 /* Transition table */
 tBlinkersTransition transBlinkers[] = {
-    /* These are examples */
     { ST_BLINKERS_INIT, EV_BLINKERS_ANY, NULL, ST_BLINKERS_OFF},
     { ST_BLINKERS_OFF, EV_BLINKERS_CMD0, NULL, ST_BLINKERS_OFF},
     { ST_BLINKERS_OFF, EV_BLINKERS_CMD1, NULL, ST_BLINKERS_ACTIVATED_ON},
@@ -38,6 +37,8 @@ fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
     cmd_t cmd;
     ack_t ack;
     timer_bcgv_t timer;
+
+    // We search for the right data depending on the headlight asked
     if (which_blinker == HAZARD_LIGHTS) {
         cmd = get_cmd_hazard_lights();
         ack = get_ack_hazard_lights();
@@ -51,125 +52,147 @@ fsm_blinkers_event_t get_blinkers_next_event(fsm_blinkers_state_t current_state,
         ack = get_ack_right_blinkers();
         timer = get_timer_right_blinkers();
     }
+
+    // Desision logic based on state
     switch (current_state)
     {
-    case ST_BLINKERS_OFF:
-        if (cmd == 0) { return EV_BLINKERS_CMD0; }
-        if (cmd == 1) { return EV_BLINKERS_CMD1; }
-        break;
-    case ST_BLINKERS_ACTIVATED_ON:
-        if (ack == 1) {
+        case ST_BLINKERS_OFF:
             if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0); // Reset the timer because recieved
+                set_ack_hazard_lights(0);
             }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
+                set_ack_left_blinkers(0);
+            }else{
+                set_ack_right_blinkers(0);
             }
-            return EV_BLINKERS_ACK_REC;
-        }
-        if (timer >= 10) {
+            if (cmd == 0) { return EV_BLINKERS_CMD0; }
+            if (cmd == 1) { return EV_BLINKERS_CMD1; }
+            break;
+        case ST_BLINKERS_ACTIVATED_ON:
+            if (ack == 1) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0); // Reset the timer because recieved
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_ACK_REC;
+            }
+            if (timer >= 10) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0); // Reset the timer because recieved
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_ACK_NOT_REC;
+            } else {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(timer + 1);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(timer + 1);
+                }
+            }
+            if (cmd == 0) { return EV_BLINKERS_CMD0; }
+            if (cmd == 1) { return EV_BLINKERS_CMD1; }
+            break;
+        case ST_BLINKERS_ACK_ON:
             if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0); // Reset the timer because recieved
+                set_ack_hazard_lights(0);
             }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
+                set_ack_left_blinkers(0);
+            }else{
+                set_ack_right_blinkers(0);
             }
-            return EV_BLINKERS_ACK_NOT_REC;
-        } else {
+            if (timer >= 10) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0); // Reset the timer because recieved
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_1SEC;
+            } else {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(timer + 1);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(timer + 1);
+                }
+            }
+            if (cmd == 0) { return EV_BLINKERS_CMD0; }
+            if (cmd == 1) { return EV_BLINKERS_CMD1; }
+            break;
+        case ST_BLINKERS_ACTIVATED_OFF:
+            if (ack == 1) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0);
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_ACK_REC;
+            }
+            if (timer >= 10) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0);
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_ACK_NOT_REC;
+            } else {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(timer + 1);
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(timer + 1);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(timer + 1);
+                }
+            }
+            if (cmd == 0) { return EV_BLINKERS_CMD0; }
+            if (cmd == 1) { return EV_BLINKERS_CMD1; }
+            break;
+        case ST_BLINKERS_ACK_OFF:
             if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
+                set_ack_hazard_lights(0);
             }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(timer + 1);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(timer + 1);
+                set_ack_left_blinkers(0);
+            }else{
+                set_ack_right_blinkers(0);
             }
-        }
-        if (cmd == 0) { return EV_BLINKERS_CMD0; }
-        if (cmd == 1) { return EV_BLINKERS_CMD1; }
-        // Timeout managment (1s = 10 * 100ms)
-        break;
-    case ST_BLINKERS_ACK_ON:
-        if (timer >= 10) {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0); // Reset the timer because recieved
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
+            if (timer >= 10) {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(0);
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(0);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(0);
+                }
+                return EV_BLINKERS_1SEC;
+            } else {
+                if (which_blinker == HAZARD_LIGHTS){
+                    set_timer_hazard_lights(timer + 1);
+                }else if (which_blinker == LEFT_BLINKERS){
+                    set_timer_left_blinkers(timer + 1);
+                }else if (which_blinker == RIGHT_BLINKERS){
+                    set_timer_right_blinkers(timer + 1);
+                }
             }
-            return EV_BLINKERS_1SEC;
-        } else {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(timer + 1); // Reset the timer because recieved
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(timer + 1);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(timer + 1);
-            }
-        }
-        if (cmd == 0) { return EV_BLINKERS_CMD0; }
-        if (cmd == 1) { return EV_BLINKERS_CMD1; }
-        break;
-    case ST_BLINKERS_ACTIVATED_OFF:
-        if (ack == 1) {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0);
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
-            }
-            return EV_BLINKERS_ACK_REC;
-        }
-        if (timer >= 10) {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0);
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
-            }
-            return EV_BLINKERS_ACK_NOT_REC;
-        } else {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(timer + 1);
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(timer + 1);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(timer + 1);
-            }
-        }
-        if (cmd == 0) { return EV_BLINKERS_CMD0; }
-        if (cmd == 1) { return EV_BLINKERS_CMD1; }
-        break;
-    case ST_BLINKERS_ACK_OFF:
-        if (timer >= 10) {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(0);
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(0);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(0);
-            }
-            return EV_BLINKERS_1SEC;
-        } else {
-            if (which_blinker == HAZARD_LIGHTS){
-                set_timer_hazard_lights(timer + 1);
-            }else if (which_blinker == LEFT_BLINKERS){
-                set_timer_left_blinkers(timer + 1);
-            }else if (which_blinker == RIGHT_BLINKERS){
-                set_timer_right_blinkers(timer + 1);
-            }
-        }
-        if (cmd == 0) { return EV_BLINKERS_CMD0; }
-        if (cmd == 1) { return EV_BLINKERS_CMD1; }
-        break;
-    case ST_BLINKERS_ERROR:
-        break;
-    default:
-        break;
+            if (cmd == 0) { return EV_BLINKERS_CMD0; }
+            if (cmd == 1) { return EV_BLINKERS_CMD1; }
+            break;
+        case ST_BLINKERS_ERROR:
+            break;
+        default:
+            break;
     }
     return EV_BLINKERS_NONE;
 }
