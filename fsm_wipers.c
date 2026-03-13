@@ -12,7 +12,6 @@
 
 /* Transition table */
 tWipersTransition transWipers[] = {
-    /* These are examples */
     { ST_WIPERS_WASHERS_INIT, EV_WIPERS_WASHERS_ANY, NULL, ST_WIPERS_WASHERS_ALL_OFF},
     { ST_WIPERS_WASHERS_ALL_OFF, EV_WIPERS_WASHERS_CMD_EG1, NULL, ST_WIPERS_ACTIVE},
     { ST_WIPERS_WASHERS_ALL_OFF, EV_WIPERS_WASHERS_CMD_LG1, NULL, ST_WIPERS_WASHERS_ACTIVE},
@@ -38,6 +37,7 @@ fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state)
     cmd_ww = get_cmd_windshield_washer(); //Window washers - ww
     timer = get_timer_wipers();
     
+    // Desision logic based on state
     switch (current_state) {
         case ST_WIPERS_WASHERS_ALL_OFF:
             if (cmd_wp == 0 && cmd_ww == 0){
@@ -71,7 +71,6 @@ fsm_wipers_event_t get_wipers_next_event(fsm_wipers_state_t current_state)
                 return EV_WIPERS_WASHERS_MORE_2SEC;
             }else {
                 set_timer_wipers(timer + 1);
-                //printf("\ntimer: %d\n",timer);
                 return EV_WIPERS_WASHERS_LESS_2SEC;
             }
             if (cmd_ww == 1){ return EV_WIPERS_WASHERS_CMD_LG1; }

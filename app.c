@@ -156,18 +156,18 @@ void receive_frames(int32_t fd_frame){
                 for (i = 0; i<serialDataLen;i++){
                     message = messages[i];
                     if (message.serNum == SER_NUM_COMODO){
-                         translate_serial(message.frame[0]);
+                        translate_serial(message.frame[0]);
                     }else if (message.serNum == SER_NUM_BGF){
                         switch (message.frame[0])
                         {
                         case 1:
-                            set_ack_position_lights(message.frame[1]);
+                            set_ack_position_lights(1);
                             break;
                         case 2:
-                            set_ack_low_beams_headlights(message.frame[1]);
+                            set_ack_low_beams_headlights(1);
                             break;
                         case 3:
-                            set_ack_high_beams_headlights(message.frame[1]);
+                            set_ack_high_beams_headlights(1);
                             break;
                         case 4:
                             ack_blk_right = 1;
@@ -181,14 +181,12 @@ void receive_frames(int32_t fd_frame){
                     }
                 }
                 if (ack_blk_left !=2 && ack_blk_right !=2 && ack_blk_left == ack_blk_right){
-                    set_ack_hazard_lights(ack_blk_left);
+                    set_ack_hazard_lights(1);
                 }else if (ack_blk_right != 2){
-                    set_ack_right_blinkers(ack_blk_right);
+                    set_ack_right_blinkers(1);
                 }else if (ack_blk_left != 2){
-                    set_ack_left_blinkers(ack_blk_left);
+                    set_ack_left_blinkers(1);
                 }
-            }else if (frame[14]!=crc_8(frame,14)){
-                printf("UDP frame NOT TRANSLATED BECAUSE CRC8\n");
             }
             return;
         }
@@ -206,6 +204,10 @@ void send_frames(int32_t fd_frame){
     int32_t res_ser;
     uint8_t udpFrame[10]={0};
     int32_t res_udp;
+
+    //Sending serial messages
+
+    //Sending serial message for the position lights only if its state has changed
     if (previous_state_position != state_position){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -216,12 +218,12 @@ void send_frames(int32_t fd_frame){
             serialData[0].frame[0]=POSITION_LIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 1);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+    //Sending serial message for the low beams headlights only if its state has changed
     if (previous_state_low_beams != state_low_beams){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -232,12 +234,12 @@ void send_frames(int32_t fd_frame){
             serialData[0].frame[0]=LOW_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 1);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+    //Sending serial message for the high beams headlights only if its state has changed
     if (previous_state_high_beams != state_high_beams){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -248,12 +250,12 @@ void send_frames(int32_t fd_frame){
             serialData[0].frame[0]=HIGH_BEAMS_HEADLIGHTS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 1);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+    //Sending serial message for the hazard lights only if its state has changed
     if (previous_state_hazard_lights != state_hazard_lights){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -270,12 +272,12 @@ void send_frames(int32_t fd_frame){
             serialData[1].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[1].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 2);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+    //Sending serial message for the right blinker only if its state has changed
     if (previous_state_right_blinkers != state_right_blinkers){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -286,12 +288,12 @@ void send_frames(int32_t fd_frame){
             serialData[0].frame[0]=RIGHT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 1);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+    //Sending serial message for the left blinker only if its state has changed
     if (previous_state_left_blinkers != state_left_blinkers){
         serialData[0].serNum = SER_NUM_BGF;
         serialData[0].frameSize = 2;
@@ -302,12 +304,13 @@ void send_frames(int32_t fd_frame){
             serialData[0].frame[0]=LEFT_BLINKERS_ACTIVATION;
             serialData[0].frame[1]=1;
         }
-        //printf("SEND BGF: ID=%d, VAL=%d\n", serialData[0].frame[0], serialData[0].frame[1]);
         res_ser = drv_write_ser(fd_frame, serialData, 1);
         if (res_ser == DRV_ERROR){
             printf("Error: There has been a error while writing data on serial lines");
         }
     }
+
+    //Sending the udp frame
 
     if (get_ack_position_lights()==1 && get_cmd_position_lights()==1){
         udpFrame[0]+=128;

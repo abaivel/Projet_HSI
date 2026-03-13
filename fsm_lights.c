@@ -12,7 +12,6 @@
 
 /* Transition table */
 tTransition transLights[] = {
-    /* These are examples */
     { ST_LIGHTS_INIT, EV_LIGHTS_ANY, NULL, ST_LIGHTS_OFF},
     { ST_LIGHTS_OFF, EV_LIGHTS_CMD1, NULL, ST_LIGHTS_ON},
     { ST_LIGHTS_OFF, EV_LIGHTS_CMD0, NULL, ST_LIGHTS_OFF},
@@ -45,7 +44,7 @@ fsm_lights_event_t get_lights_next_event(fsm_lights_state_t current_state, light
         timer = get_timer_high_beams_headlights();
     }
 
-    // 2. Desision logic based on state
+    // Desision logic based on state
     switch (current_state) {
         case ST_LIGHTS_OFF:
             if (which_light == POSITION_LIGHTS){
