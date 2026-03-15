@@ -48,5 +48,7 @@ L'envoi des trames est géré entièrement par la fonction *send_frames* qui gè
 
 C'est dans cette fonction *receive_frames* qu'est géré l'acquittement. Selon le serial number de la trame serial reçue, la fonction *receive_frames* appelle la fonction *translate_serial* ou met à jour l'acquittement de la donnée adaptée.
 
+Pour la donnée de la trame udp appelée "Voyant défaut moteur", nous sommes partis du principe qu'il fallait que le voyant s'allume s'il y avait un problème moteur donc soit un défaut de pression, soit un problème de température du liquide de refroidissemnt ou un problème de surchauffe huile.
+
 ### Question 8
 Pour respecter le schéma, nous avons juste ajouté quelques lignes à la fonction *receive_frames* pour récupérer le numéro de trame et le comparer au précédent.

@@ -321,7 +321,7 @@ void send_frames(int32_t fd_frame){
     if (get_ack_high_beams_headlights()==1 && get_cmd_high_beams_headlights()==1){
         udpFrame[0]+=32;
     }
-    if (get_tank_level() <= 2){
+    if (get_tank_level() <= 2){ //5% of 40 = 2
         udpFrame[0]+=16;
     }
     if (get_engine_problems() != NO_ENGINE_PROBLEM){
@@ -334,7 +334,7 @@ void send_frames(int32_t fd_frame){
         udpFrame[0]+=1;
     }
 
-    if (state_hazard_lights != ST_BLINKERS_OFF && state_hazard_lights != ST_BLINKERS_ERROR){
+    if (state_hazard_lights == ST_BLINKERS_ACTIVATED_ON || state_hazard_lights == ST_BLINKERS_ACK_ON){ //the warning light on the dashboard must blink with the blinkers
         udpFrame[1]+=128;
     }
     if (get_battery_problems() == FAILURE){
